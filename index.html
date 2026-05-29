@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Udayan | Empowering & Connecting Our Community</title>
+  <meta name="description" content="Welcome to Udayan, a premier social organisation driving cultural enrichment, physical wellness, social service, and community learning since 2012.">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- FontAwesome Icons for premium modern styling -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- ============================================== -->
+  <!-- 1. STICKY HEADER & NAVIGATION -->
+  <!-- ============================================== -->
+  <header id="site-header">
+    <div class="container nav-wrapper">
+      <a href="#hero" class="brand" id="nav-brand-link">
+        <div class="brand-logo-sun" title="Udayan Rising Sun">
+          <i class="fa-solid fa-sun"></i>
+        </div>
+        <div class="brand-text">Udayan</div>
+      </a>
+      
+      <nav>
+        <ul class="nav-menu" id="nav-menu-bar">
+          <li><a href="#hero" class="nav-link active" id="link-hero">Home</a></li>
+          <li><a href="#about" class="nav-link" id="link-about">About Us</a></li>
+          <li><a href="#departments" class="nav-link" id="link-depts">Our Wings</a></li>
+          <li><a href="#events" class="nav-link" id="link-events">Events</a></li>
+          <li><a href="#donation" class="nav-link" id="link-donation">Donate</a></li>
+          <li><a href="#contact" class="nav-link" id="link-contact">Contact Us</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <!-- Theme Switcher Button -->
+        <button class="btn-theme-toggle" id="theme-toggle-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Light/Dark Theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        
+        <!-- Database Sync Status Badge -->
+        <div id="db-sync-status-badge" style="font-size: 0.7rem; font-weight: 700; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-round); padding: 6px 12px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted);">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #64748b;" id="db-sync-dot"></span>
+          <span id="db-sync-text">Loading Sync...</span>
+        </div>
+        
+        <!-- On-Site Log In Triggers -->
+        <button class="btn btn-primary" id="btn-login-trigger" style="padding: 10px 18px; font-size: 0.85rem;">
+          <i class="fa-solid fa-right-to-bracket"></i> Log In
+        </button>
+        
+        <!-- Logged In User Profile Box -->
+        <div class="header-profile-box" id="profile-info-nav">
+          <span class="user-name" id="profile-user-display">Jane Doe</span>
+          <span class="user-role" id="profile-role-display">Admin</span>
+          <button id="btn-logout" title="Log Out" style="background: transparent; border: none; color: var(--error); margin-left: 8px; font-size: 1.05rem; cursor: pointer; transition: var(--transition-bounce);">
+            <i class="fa-solid fa-power-off"></i>
+          </button>
+        </div>
+
+        <!-- Hamburger Icon for Mobile Navigation -->
+        <button class="hamburger" id="mobile-hamburger" title="Open navigation menu" aria-label="Open navigation menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================== -->
+  <!-- 2. HERO / HOME SECTION -->
+  <!-- ============================================== -->
+  <section class="hero" id="hero">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <h1>Nurturing Minds.<br>Inspiring <span>Community</span>.</h1>
+        <p>Welcome to Udayan, a thriving social organisation dedicated to local health support, classical cultural training, sports, wellness, and collaborative social work. Together, we make a difference.</p>
+        
+        <div class="hero-btns">
+          <a href="#departments" class="btn btn-primary" id="hero-btn-explore">
+            <i class="fa-solid fa-compass"></i> Explore Wings
+          </a>
+          <a href="#donation" class="btn btn-secondary" id="hero-btn-support">
+            <i class="fa-solid fa-heart"></i> Support Our Cause
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-num" id="hero-stat-members">500+</span>
+            <span class="stat-lbl">Members enrolled</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num" id="hero-stat-depts">9+</span>
+            <span class="stat-lbl">Active Departments</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-image-wrapper">
+        <div class="hero-art-card">
+          <div class="art-inner">
+            <div class="art-header">
+              <span class="art-tag">Next Event</span>
+              <span class="art-icon">📅</span>
+            </div>
+            <div class="art-center" id="hero-event-title">
+              Free Community<br>Health Screening Clinic
+            </div>
+            <div class="art-footer">
+              <div class="art-avatar" id="hero-event-avatar">H</div>
+              <div class="art-user">
+                <h4 id="hero-event-location">Dispensary Wing</h4>
+                <p id="hero-event-date">June 05, 2026</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- SECURE TRANSACTIONS & ADMINISTRATIVE CONSOLE -->
+  <!-- ============================================== -->
+  <section class="transactions-console" id="transactions-console">
+    <div class="container">
+      <!-- Dynamic Glassmorphic Welcome Card Placeholder -->
+      <div id="console-welcome-area" style="margin-bottom: 30px;"></div>
+
+      <!-- Console Sub-navigation Tabs -->
+      <div class="console-tabs" id="console-dashboard-tabs">
+        <button class="console-tab-btn active" data-panel="panel-subscriptions" id="tab-subscriptions">
+          <i class="fa-solid fa-credit-card"></i> Subscriptions Ledger
+        </button>
+        <button class="console-tab-btn" data-panel="panel-events-registry" id="tab-events-registry">
+          <i class="fa-solid fa-calendar-check"></i> Event Registries
+        </button>
+        <button class="console-tab-btn" data-panel="panel-inquiries" id="tab-inquiries">
+          <i class="fa-solid fa-inbox"></i> Enrolment Inbox
+        </button>
+        <button class="console-tab-btn" data-panel="panel-wings-ledger" id="tab-wings-ledger">
+          <i class="fa-solid fa-diagram-project"></i> Wings Ledger
+        </button>
+      </div>
+
+      <!-- Tab Panel 1: Subscriptions Transaction Ledger -->
+      <div class="console-view-panel active" id="panel-subscriptions">
+        <!-- Access checking will render this dynamically based on role -->
+        <div id="subscriptions-auth-content">
+          <div class="payment-drawer-grid">
+            
+            <!-- Left Side: Table of Members Dues -->
+            <div>
+              <div class="console-filter-bar">
+                <input type="text" class="console-search-input" id="sub-ledger-search" placeholder="Search members by name...">
+                <select id="sub-status-filter" class="form-control" style="width: 160px; padding: 10px;">
+                  <option value="all">All States</option>
+                  <option value="cleared">Cleared Dues</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+
+              <div class="table-responsive">
+                <table class="transaction-table" id="subs-table-el">
+                  <thead>
+                    <tr>
+                      <th>Member Name</th>
+                      <th>Category</th>
+                      <th>Phone</th>
+                      <th>Cleared Upto</th>
+                      <th>Last Invoice</th>
+                      <th>Dues status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="subs-table-body">
+                    <!-- Dynamic Rows compiled in script.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right Side: Record Subscription Payments Form -->
+            <div class="payment-form-card">
+              <h3><i class="fa-solid fa-indian-rupee-sign" style="color: var(--secondary);"></i> Record Member Payment</h3>
+              <form id="record-payment-form" novalidate>
+                <div class="form-group">
+                  <label for="payment-member-select">Select Member</label>
+                  <select id="payment-member-select" class="form-control" required>
+                    <option value="" disabled selected>Select a member...</option>
+                    <!-- Dynamically populated in script -->
+                  </select>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="payment-amount">Payment Amount (₹)</label>
+                    <input type="number" id="payment-amount" class="form-control" placeholder="300" required min="50">
+                  </div>
+                  <div class="form-group">
+                    <label for="payment-months">Extend Upto (Month)</label>
+                    <input type="month" id="payment-months" class="form-control" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="payment-bill">Invoice Reference / Bill Number</label>
+                  <input type="text" id="payment-bill" class="form-control" placeholder="Auto-Generated" readonly>
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-submit-payment" style="width: 100%; justify-content: center; padding: 12px;">
+                  <i class="fa-solid fa-cash-register"></i> Complete Billing Transaction
+                </button>
+              </form>
+
+              <!-- Live billing transactions stream -->
+              <div class="activity-logs-card" style="margin-top: 24px; padding: 18px 0 0 0; border: none; box-shadow: none;">
+                <h3 style="font-size: 0.95rem; border-bottom: 1px dashed var(--border); padding-bottom: 6px; margin-bottom: 12px;"><i class="fa-solid fa-clock-rotate-left"></i> Session Logs</h3>
+                <ul class="activity-list" id="billing-activity-logs">
+                  <li style="color: var(--text-muted); font-size: 0.75rem;">No payment transactions completed in this session.</li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Panel 2: Event Registries Hub -->
+      <div class="console-view-panel" id="panel-events-registry">
+        <div id="events-auth-content" class="event-registries-layout">
+          
+          <!-- Left: Event list picker -->
+          <div class="event-picker-panel">
+            <h3 style="font-size: 1.1rem; margin-bottom: 16px;"><i class="fa-solid fa-list-check"></i> Choose Active Event</h3>
+            <div id="event-registry-picker-list">
+              <!-- Dynamically populated in script -->
+            </div>
+          </div>
+
+          <!-- Right: Registry and addition form -->
+          <div class="registry-details-panel">
+            <div class="registry-header">
+              <h3 id="active-registry-title">Yoga & Pranayam Morning Session</h3>
+              <p id="active-registry-meta"><i class="fa-regular fa-calendar"></i> May 28, 2026 | <i class="fa-solid fa-location-dot"></i> Park Complex</p>
+            </div>
+
+            <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--primary);"><i class="fa-solid fa-users-viewfinder"></i> Participant Roster</h4>
+            <ul class="participants-roster" id="active-registry-roster">
+              <!-- Dynamically populated roster -->
+            </ul>
+
+            <!-- Add participant form -->
+            <div class="add-participant-box" id="event-add-participant-container">
+              <h4 style="font-size: 0.9rem; margin-bottom: 12px;"><i class="fa-solid fa-user-plus"></i> Assign Participant</h4>
+              <form id="add-participant-form" style="display: flex; gap: 12px;" novalidate>
+                <select id="event-member-select" class="form-control" style="flex-grow: 1;" required>
+                  <option value="" disabled selected>Choose a person...</option>
+                  <!-- Dynamically populated in script -->
+                </select>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 18px;">
+                  <i class="fa-solid fa-signature"></i> Add
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tab Panel 3: Submitted User Inquiries Inbox -->
+      <div class="console-view-panel" id="panel-inquiries">
+        <div id="inquiries-auth-content">
+          <div class="console-filter-bar" style="margin-bottom: 30px;">
+            <p style="flex-grow: 1; font-weight: 500;" id="inquiries-count-info">0 pending applications in queue</p>
+            <button class="btn btn-secondary" style="font-size: 0.8rem; padding: 8px 14px;" id="btn-clear-inbox">
+              <i class="fa-solid fa-trash-can"></i> Clear Processed Logs
+            </button>
+          </div>
+          <div class="inbox-list" id="inbox-cards-container">
+            <!-- Compiled dynamically in script.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Panel 4: Wings & Departments Modification Ledger -->
+      <div class="console-view-panel" id="panel-wings-ledger">
+        <div id="wings-auth-content">
+          <div class="console-filter-bar" style="margin-bottom: 24px;">
+            <p style="flex-grow: 1; font-weight: 500;" id="wings-count-info">0 Wings Configured</p>
+            <button class="btn btn-primary" id="btn-add-wing-trigger" style="font-size: 0.85rem; padding: 10px 16px;">
+              <i class="fa-solid fa-square-plus"></i> Create New Department
+            </button>
+          </div>
+          
+          <!-- Dynamic Wings List Table -->
+          <div class="table-responsive" style="margin-bottom: 30px;">
+            <table class="transaction-table" id="wings-table-el">
+              <thead>
+                <tr>
+                  <th>Icon</th>
+                  <th>Wing Name</th>
+                  <th>Category</th>
+                  <th>Weekly Timings</th>
+                  <th>Fees Structure</th>
+                  <th>POC Officer</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="wings-table-body">
+                <!-- Dynamically compiled in script.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Billing & Details Drawer Form Panel -->
+          <div class="payment-form-card" id="wing-action-drawer" style="display: none; margin-top: 24px; animation: fadeIn 0.4s ease; text-align: left;">
+            <h3 id="wing-drawer-title"><i class="fa-solid fa-edit"></i> Edit Wing Details</h3>
+            <form id="wing-action-form" novalidate>
+              <input type="hidden" id="wing-action-id">
+              <input type="hidden" id="wing-action-mode" value="edit"> <!-- "edit" or "create" -->
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="wing-form-name">Department Name</label>
+                  <input type="text" id="wing-form-name" class="form-control" placeholder="E.g. Karate Academy" required>
+                </div>
+                <div class="form-group" id="wing-category-form-group">
+                  <label for="wing-form-category">Category</label>
+                  <select id="wing-form-category" class="form-control" required>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Library">Library</option>
+                    <option value="Social Service">Social Service</option>
+                    <option value="Others">Others</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="wing-form-icon">Emoji Icon</label>
+                  <input type="text" id="wing-form-icon" class="form-control" placeholder="🥋" required maxlength="4">
+                </div>
+                <div class="form-group">
+                  <label for="wing-form-timings">Weekly Timings</label>
+                  <input type="text" id="wing-form-timings" class="form-control" placeholder="E.g. Saturdays, 4:00 PM" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="wing-form-admission">Admission Fees</label>
+                  <input type="text" id="wing-form-admission" class="form-control" placeholder="E.g. ₹500" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="wing-form-monthly">Monthly Fees</label>
+                  <input type="text" id="wing-form-monthly" class="form-control" placeholder="E.g. ₹200" required>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top: 20px;">
+                <label for="wing-form-about">About Description</label>
+                <textarea id="wing-form-about" class="form-control" required placeholder="Describe the wing objectives..." style="height: 80px;"></textarea>
+              </div>
+
+              <h4 style="font-size: 0.95rem; margin-top: 20px; margin-bottom: 12px; border-bottom: 1px dashed var(--border); padding-bottom: 6px; color: var(--primary);"><i class="fa-solid fa-user-shield"></i> Point of Contact (POC) Officer</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="wing-form-poc-name">Officer Name</label>
+                  <input type="text" id="wing-form-poc-name" class="form-control" placeholder="Arundhati Sen" required>
+                </div>
+                <div class="form-group">
+                  <label for="wing-form-poc-role">Officer Designation</label>
+                  <input type="text" id="wing-form-poc-role" class="form-control" placeholder="Teacher" required>
+                </div>
+                <div class="form-group">
+                  <label for="wing-form-poc-phone">Officer Phone</label>
+                  <input type="tel" id="wing-form-poc-phone" class="form-control" placeholder="9876543210" pattern="[0-9]{10}" required>
+                </div>
+              </div>
+
+              <!-- Gallery Showcase Manager -->
+              <div id="wing-form-gallery-manager" style="margin-top: 20px; margin-bottom: 20px;">
+                <h4 style="font-size: 0.95rem; margin-bottom: 12px; border-bottom: 1px dashed var(--border); padding-bottom: 6px; color: var(--primary);"><i class="fa-solid fa-images"></i> Manage Wing Showcase Photos</h4>
+                
+                <div id="wing-gallery-thumbnails-list" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+                  <!-- Thumbnail previews render dynamically -->
+                </div>
+                
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <input type="url" id="wing-new-photo-url" class="form-control" style="flex: 1; min-width: 240px;" placeholder="Paste Unsplash Image URL...">
+                  <input type="text" id="wing-new-photo-caption" class="form-control" style="width: 180px;" placeholder="Photo Caption">
+                  <button type="button" class="btn btn-secondary" id="btn-wing-add-photo" style="padding: 10px 16px; background: var(--primary-light); color: var(--primary);"><i class="fa-solid fa-plus"></i> Add Photo</button>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="btn btn-secondary" id="btn-wing-form-cancel" style="flex: 1; justify-content: center; padding: 12px;"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 12px;"><i class="fa-solid fa-floppy-disk"></i> Save Department</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- 3. ABOUT US SECTION -->
+  <!-- ============================================== -->
+  <section class="about" id="about">
+    <div class="container about-grid">
+      <div class="about-image">
+        <div class="about-image-inner">
+          <div class="val-box">
+            <div class="val-icon">🤝</div>
+            <h3>Cooperation</h3>
+            <p>Fostering unity and deep mutual support among community wings.</p>
+          </div>
+          <div class="val-box">
+            <div class="val-icon">🎨</div>
+            <h3>Heritage</h3>
+            <p>Cultivating classical arts, classical music, and fine drama skills.</p>
+          </div>
+          <div class="val-box">
+            <div class="val-icon">🧘‍♀️</div>
+            <h3>Wellness</h3>
+            <p>Enhancing health via structured yoga sessions and health clinics.</p>
+          </div>
+          <div class="val-box">
+            <div class="val-icon">🌳</div>
+            <h3>Service</h3>
+            <p>Sustaining generic medicines distribution and disaster reliefs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-content">
+        <h2>Who We Are</h2>
+        <h3>Connecting Generations, Building Careers</h3>
+        <p>Founded in 2012, Udayan stands as a premier non-profit social organization. We focus on bridging communities through specialized sports clusters, classic art academies, a public library, and structured social services.</p>
+        <p>Our operations are designed with absolute clarity, offering administrative excellence and secure local database integrations to run cultural, sports, and relief drives without friction.</p>
+        
+        <!-- Committee structure -->
+        <div class="committees-grid">
+          <div class="committee-list">
+            <h4><i class="fa-solid fa-user-tie"></i> Executive Committee</h4>
+            <ul id="executive-committee-list">
+              <li><span>Subrata Dey</span> <span class="role">President</span></li>
+              <li><span>Bimal Krishna Roy</span> <span class="role">Gen. Secretary</span></li>
+              <li><span>Sulata Ghosh</span> <span class="role">Treasurer</span></li>
+            </ul>
+          </div>
+          <div class="committee-list">
+            <h4><i class="fa-solid fa-users"></i> Sub-Committees</h4>
+            <ul id="sub-committee-list">
+              <li><span>Arundhati Sen</span> <span class="role">Cultural Convener</span></li>
+              <li><span>Rohan Banerjee</span> <span class="role">Sports Coordinator</span></li>
+              <li><span>Keya Das</span> <span class="role">Student Coordinator</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- 4. DEPARTMENTS SECTION -->
+  <!-- ============================================== -->
+  <section class="departments" id="departments">
+    <div class="container">
+      <div class="section-header">
+        <h2>Our Active Wings</h2>
+        <p>Explore our wide array of departments, from visual arts and health clinics to physical fitness hubs and neighborhood libraries.</p>
+      </div>
+
+      <!-- Tab Filter Chips -->
+      <div class="dept-hub-filters" id="dept-filters-wrapper">
+        <button class="filter-btn active" data-filter="all" id="btn-filter-all">All Wings</button>
+        <button class="filter-btn" data-filter="Cultural" id="btn-filter-cultural">🎭 Cultural</button>
+        <button class="filter-btn" data-filter="Sports" id="btn-filter-sports">⚽ Sports & Wellness</button>
+        <button class="filter-btn" data-filter="Social Service" id="btn-filter-social">🏥 Social Service</button>
+        <button class="filter-btn" data-filter="Library" id="btn-filter-library">📚 Library</button>
+      </div>
+
+      <!-- Dynamic Departments Cards Grid -->
+      <div class="depts-grid" id="depts-list-grid">
+        <!-- Rendered Dynamically in script.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- 5. EVENTS PLANNERS SECTION -->
+  <!-- ============================================== -->
+  <section class="events" id="events">
+    <div class="container">
+      <div class="section-header">
+        <h2>Upcoming & Past Events</h2>
+        <p>Stay updated and take active part in our community events, workshops, exhibitions, and social services.</p>
+      </div>
+
+      <!-- Events Cards Grid -->
+      <div class="events-grid" id="events-list-grid">
+        <!-- Rendered Dynamically in script.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- 6. PREMIUM DONATION CALCULATOR PORTAL -->
+  <!-- ============================================== -->
+  <section class="donation" id="donation">
+    <div class="container donation-grid">
+      <div class="donation-content">
+        <h2>Support Our Services</h2>
+        <p>Your contribution keeps our free dispensary, public library, and children's fine art workshops fully operational. Explore our priority causes and make an impact today.</p>
+        
+        <div class="causes-chips">
+          <div class="cause-chip-item">
+            <div class="cause-item-icon"><i class="fa-solid fa-kit-medical"></i></div>
+            <div class="cause-item-text">
+              <h4>Subsidized Medical Kits</h4>
+              <p>Providing generic prescriptions for underprivileged local residents.</p>
+            </div>
+          </div>
+
+          <div class="cause-chip-item">
+            <div class="cause-item-icon"><i class="fa-solid fa-book-open"></i></div>
+            <div class="cause-item-text">
+              <h4>Library Expansion Fund</h4>
+              <p>Adding new reference encyclopedias, historical and science digests.</p>
+            </div>
+          </div>
+
+          <div class="cause-chip-item">
+            <div class="cause-item-icon"><i class="fa-solid fa-paintbrush"></i></div>
+            <div class="cause-item-text">
+              <h4>Children's Art Supplies</h4>
+              <p>Funding clay, watercolor tubes, brushes, and sketching papers.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="donation-widget">
+        <h3>Donate to Udayan</h3>
+        <p class="widget-sub">Select or enter a custom donation amount below</p>
+        
+        <div class="amt-btn-group" id="donation-amount-group">
+          <button class="amt-btn" data-amt="250">₹250</button>
+          <button class="amt-btn active" data-amt="500">₹500</button>
+          <button class="amt-btn" data-amt="1000">₹1000</button>
+          <button class="amt-btn" data-amt="2500">₹2500</button>
+        </div>
+
+        <div class="donation-input-wrapper">
+          <span class="donation-input-currency">₹</span>
+          <input type="number" class="donation-input" id="donation-custom-input" value="500" min="50" placeholder="Enter amount">
+        </div>
+
+        <div class="widget-select-group">
+          <label for="donation-cause-select">Select a cause</label>
+          <select id="donation-cause-select" class="cause-select">
+            <option value="dispensary">Healthcare & Community Dispensary</option>
+            <option value="library">Library Books & Archival Upkeep</option>
+            <option value="art-school">Children's Fine Arts & Dance school</option>
+            <option value="general" selected>General Contribution / Maintenance</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="btn-donate-now">
+          <i class="fa-solid fa-heart"></i> Complete Contribution
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- 7. JOIN US & CONTACT US FORMS -->
+  <!-- ============================================== -->
+  <section class="contact" id="contact">
+    <div class="container contact-grid">
+      <div class="contact-info-panel">
+        <div>
+          <h3>Get In Touch</h3>
+          <p class="info-intro">Have questions regarding our class timings, library registrations, or executive meetings? Reach out to us or apply to join our wings as a volunteer.</p>
+          
+          <div class="contact-methods">
+            <div class="contact-card-item">
+              <div class="contact-card-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+              <div class="contact-card-details">
+                <h4>Our Address</h4>
+                <p>18/C Lake Road, Ballygunge, near Lake Mall, Kolkata - 700029</p>
+              </div>
+            </div>
+
+            <div class="contact-card-item">
+              <div class="contact-card-icon"><i class="fa-solid fa-phone-volume"></i></div>
+              <div class="contact-card-details">
+                <h4>Call Representatives</h4>
+                <p><a href="tel:+919830098300">+91 98300 98300</a> (President)</p>
+                <p><a href="tel:+919163012345">+91 91630 12345</a> (Volunteer Head)</p>
+              </div>
+            </div>
+
+            <div class="contact-card-item">
+              <div class="contact-card-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+              <div class="contact-card-details">
+                <h4>Email Support</h4>
+                <p><a href="mailto:contact@udayan.org">contact@udayan.org</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="portal-cta">
+          <h4>Already a Member or Officer?</h4>
+          <p>Access our internal, role-based transaction registers to clear dues, billing receipts, and schedule event rosters directly on-site by logging in.</p>
+          <a href="#hero" class="btn btn-secondary" style="font-size: 0.85rem; padding: 10px 16px;" id="btn-cta-login-nav">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Account
+          </a>
+        </div>
+      </div>
+
+      <div class="form-panel">
+        <!-- Form Switching Tabs -->
+        <div class="form-tabs" id="contact-form-tabs">
+          <button class="form-tab-btn active" data-form="contact-msg-form" id="tab-contact">Send Message</button>
+          <button class="form-tab-btn" data-form="contact-join-form" id="tab-join">Join / Volunteer</button>
+        </div>
+
+        <!-- Tab 1: General Contact Form -->
+        <form class="interactive-form active" id="contact-msg-form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="msg-name">Full Name</label>
+              <input type="text" id="msg-name" class="form-control" placeholder="Jane Doe" required>
+            </div>
+            <div class="form-group">
+              <label for="msg-email">Email Address</label>
+              <input type="email" id="msg-email" class="form-control" placeholder="jane@example.com" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="msg-subject">Subject</label>
+            <input type="text" id="msg-subject" class="form-control" placeholder="Inquiry about timings" required>
+          </div>
+          <div class="form-group">
+            <label for="msg-text">Message Details</label>
+            <textarea id="msg-text" class="form-control" placeholder="Write your message here..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-form-submit" id="btn-submit-message">
+            <i class="fa-solid fa-paper-plane"></i> Send Secure Message
+          </button>
+        </form>
+
+        <!-- Tab 2: Join / Enrollment Form -->
+        <form class="interactive-form" id="contact-join-form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="join-name">Full Name</label>
+              <input type="text" id="join-name" class="form-control" placeholder="John Doe" required>
+            </div>
+            <div class="form-group">
+              <label for="join-phone">Phone Number</label>
+              <input type="tel" id="join-phone" class="form-control" placeholder="9876543210" pattern="[0-9]{10}" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="join-email">Email Address</label>
+              <input type="email" id="join-email" class="form-control" placeholder="john@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="join-wing">Preferred Wing</label>
+              <select id="join-wing" class="form-control" required>
+                <option value="" disabled selected>Select a wing</option>
+                <option value="cultural-art-school">Art School (Cultural)</option>
+                <option value="cultural-ghungur">Ghungur Dance Academy (Cultural)</option>
+                <option value="sports-yogasana">Mohila Yogasana (Sports)</option>
+                <option value="sports-pranayam">Pranayam (Wellness)</option>
+                <option value="social-dispensary">Dispensary (Social Service)</option>
+                <option value="general-volunteer">General Volunteer</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="join-remarks">Short Background / Notes</label>
+            <textarea id="join-remarks" class="form-control" placeholder="Tell us briefly why you would like to join..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-form-submit" id="btn-submit-join">
+            <i class="fa-solid fa-user-plus"></i> Submit Application
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- 8. FOOTER -->
+  <!-- ============================================== -->
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a href="#hero" class="brand" id="footer-brand-link">
+          <div class="brand-logo-sun">
+            <i class="fa-solid fa-sun"></i>
+          </div>
+          <div class="brand-text" style="color: white;">Udayan</div>
+        </a>
+        <p>A zero-compromise, premium community platform connecting cultural education, library archives, athletic wellness, and generic medicinal care under a cohesive development matrix.</p>
+        <div class="social-links">
+          <a href="#" class="social-icon" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" class="social-icon" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#" class="social-icon" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" class="social-icon" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <ul class="footer-links">
+          <li><a href="#hero">Home</a></li>
+          <li><a href="#about">About Organisation</a></li>
+          <li><a href="#departments">Our Wings</a></li>
+          <li><a href="#events">Upcoming events</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="#donation">Donate Now</a></li>
+          <li><a href="#contact">Join & Volunteer</a></li>
+          <li><a href="#" id="btn-footer-login-nav">Administrative Log In</a></li>
+          <li><a href="https://supabase.com" target="_blank">Supabase Cloud database</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Timings</h4>
+        <ul class="footer-links" style="color: #64748b; font-size: 0.85rem;">
+          <li><strong style="color: #cbd5e1;">Art School:</strong> Sat & Sun 10:00 AM</li>
+          <li><strong style="color: #cbd5e1;">Dispensary:</strong> Daily 9:00 AM</li>
+          <li><strong style="color: #cbd5e1;">Yogasana:</strong> Mon & Thu 7:00 AM</li>
+          <li><strong style="color: #cbd5e1;">Library:</strong> Daily (excl. Thu) 4:00 PM</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; 2026 Udayan Social Organisation. All rights reserved.</p>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#" id="btn-footer-secured-login">Officer Dashboard Access</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================== -->
+  <!-- 9. REUSABLE SHEET MODAL OVERLAY -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="site-modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="site-modal-title">Details</h2>
+        <button class="modal-close-btn" id="site-modal-close" title="Close modal" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="site-modal-body">
+        <!-- Renders Dynamically via Script -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- 10. SECURE LOG IN MODAL OVERLAY -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="site-login-modal-overlay">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2 id="site-login-modal-title"><i class="fa-solid fa-sun" style="color: var(--solar-500);"></i> Log In to Udayan</h2>
+        <button class="modal-close-btn" id="site-login-modal-close" title="Close modal" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Access transactional ledgers, clear billing subscription payments, and coordinate registers.</p>
+        </div>
+        
+        <form id="on-site-login-form" novalidate>
+          <div class="form-group">
+            <label for="login-username">Username</label>
+            <div style="position: relative; display: flex; align-items: center;">
+              <i class="fa-solid fa-user" style="position: absolute; left: 14px; color: var(--text-muted);"></i>
+              <input type="text" id="login-username" class="form-control" style="padding-left: 38px;" placeholder="admin / teacher / student / member" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <div style="position: relative; display: flex; align-items: center;">
+              <i class="fa-solid fa-lock" style="position: absolute; left: 14px; color: var(--text-muted);"></i>
+              <input type="password" id="login-password" class="form-control" style="padding-left: 38px;" placeholder="Enter password" required>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; margin-bottom: 24px; user-select: none; cursor: pointer;">
+            <input type="checkbox" id="login-remember" style="margin-right: 8px; width: 16px; height: 16px; accent-color: var(--primary);">
+            <label for="login-remember" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer; margin-bottom: 0; text-transform: none;">Keep me logged in</label>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="btn-login-submit" style="width: 100%; padding: 14px; justify-content: center;">
+            <i class="fa-solid fa-right-to-bracket"></i> Authenticate Credentials
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- 11. FULL-SCREEN LIGHTBOX OVERLAY -->
+  <!-- ============================================== -->
+  <div class="lightbox-overlay" id="site-lightbox-overlay">
+    <span class="lightbox-close" id="site-lightbox-close" title="Close lightbox">&times;</span>
+    <img class="lightbox-img" id="site-lightbox-img" src="" alt="Zoomed Photo Showcase">
+    <div class="lightbox-caption" id="site-lightbox-caption"></div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- 12. TOAST NOTIFICATIONS CONTAINER -->
+  <!-- ============================================== -->
+  <div class="toast-container" id="site-toast-container"></div>
+
+  <!-- Supabase CDN Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Firebase Compat CDN Clients -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+</body>
+</html>
