@@ -245,6 +245,7 @@ const SEED_EVENTS = [
     date: '2026-05-28',
     location: 'Park Complex, Udayan',
     description: 'Early morning wellness camp focusing on basic breathing patterns, Pranayam, and beginner yogasanas for senior citizens.',
+    imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80',
     participants: ['p-2', 'p-3']
   },
   {
@@ -253,6 +254,7 @@ const SEED_EVENTS = [
     date: '2026-06-05',
     location: 'Dispensary Main Hall',
     description: 'Our monthly general medical checkup day in the dispensary. Providing free consultations, blood sugar tests, and basic medications.',
+    imageUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80',
     participants: ['p-2', 'p-3', 'p-6']
   },
   {
@@ -261,6 +263,7 @@ const SEED_EVENTS = [
     date: '2026-06-15',
     location: 'Community Auditorium, Lake Road',
     description: 'Rabindrasangeet recitations, classical dance pieces, and art exhibition showcasing sketches drawn by our art school students.',
+    imageUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80',
     participants: ['p-1', 'p-4', 'p-5']
   }
 ];
@@ -425,6 +428,24 @@ function initDatabaseState() {
     }
   }
 
+  // Cover image migration layer for cached browser sessions
+  let updatedEvents = false;
+  databaseEvents.forEach(evt => {
+    if (!evt.imageUrl) {
+      updatedEvents = true;
+      if (evt.id === 'e-1' || evt.title.includes('Yoga') || evt.title.includes('Pranayam')) {
+        evt.imageUrl = 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80';
+      } else if (evt.id === 'e-2' || evt.title.includes('Health') || evt.title.includes('Clinic')) {
+        evt.imageUrl = 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80';
+      } else {
+        evt.imageUrl = 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80';
+      }
+    }
+  });
+  if (updatedEvents) {
+    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(databaseEvents));
+  }
+
   // 4. Inquiries Log Queue
   let storedInq = localStorage.getItem('udayan_submitted_enquiries');
   if (!storedInq) {
@@ -543,6 +564,8 @@ function syncAndRenderEvents() {
   const today = new Date().toISOString().split('T')[0];
   databaseEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  const defaultImg = 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80';
+
   eventsGrid.innerHTML = '';
   databaseEvents.forEach(evt => {
     const status = evt.date < today ? 'past' : 'upcoming';
@@ -552,25 +575,32 @@ function syncAndRenderEvents() {
     
     eventsGrid.innerHTML += `
       <div class="event-card ${status === 'past' ? 'past' : ''}">
-        <span class="event-date-badge">
-          <i class="fa-solid ${status === 'past' ? 'fa-calendar-check' : 'fa-hourglass-half'}"></i>
-          ${status === 'past' ? 'Past' : 'Upcoming'} Event
-        </span>
-        <h3>${evt.title}</h3>
-        <p>${evt.description}</p>
-        <div class="event-details">
-          <div class="event-details-row"><i class="fa-solid fa-calendar-day"></i> <span><strong>Date:</strong> ${dateFormatted}</span></div>
-          <div class="event-details-row"><i class="fa-solid fa-map-pin"></i> <span><strong>Venue:</strong> ${evt.location || 'Lake Road Hall'}</span></div>
+        <div class="event-card-media">
+          <img src="${evt.imageUrl || defaultImg}" alt="${evt.title} showcase" loading="lazy">
+          <span class="event-date-badge">
+            <i class="fa-solid ${status === 'past' ? 'fa-calendar-check' : 'fa-hourglass-half'}"></i>
+            ${status === 'past' ? 'Past' : 'Upcoming'} Event
+          </span>
         </div>
-        ${status !== 'past' ? `
-          <button class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 0.85rem;" onclick="registerForEvent('${evt.title}')">
-            <i class="fa-solid fa-signature"></i> Register to Attend
-          </button>
-        ` : `
-          <button class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.85rem; cursor: not-allowed;" disabled>
-            <i class="fa-solid fa-ban"></i> Event Closed
-          </button>
-        `}
+        <div class="event-card-content">
+          <h3>${evt.title}</h3>
+          <p>${evt.description}</p>
+          <div class="event-details" style="margin-top: auto;">
+            <div class="event-details-row"><i class="fa-solid fa-calendar-day"></i> <span><strong>Date:</strong> ${dateFormatted}</span></div>
+            <div class="event-details-row"><i class="fa-solid fa-map-pin"></i> <span><strong>Venue:</strong> ${evt.location || 'Lake Road Hall'}</span></div>
+          </div>
+          <div style="margin-top: 16px;">
+            ${status !== 'past' ? `
+              <button class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 0.85rem;" onclick="registerForEvent('${evt.title}')">
+                <i class="fa-solid fa-signature"></i> Register to Attend
+              </button>
+            ` : `
+              <button class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.85rem; cursor: not-allowed;" disabled>
+                <i class="fa-solid fa-ban"></i> Event Closed
+              </button>
+            `}
+          </div>
+        </div>
       </div>
     `;
   });
@@ -1010,6 +1040,7 @@ function evaluateSessionState() {
   const profileUser = document.getElementById('profile-user-display');
   const profileRole = document.getElementById('profile-role-display');
   const consoleSection = document.getElementById('transactions-console');
+  const dbSyncBadge = document.getElementById('db-sync-status-badge');
 
   if (rawSession) {
     try {
@@ -1020,6 +1051,9 @@ function evaluateSessionState() {
       profileBox.style.display = 'flex';
       profileUser.textContent = activeUserSession.name;
       profileRole.textContent = activeUserSession.role;
+
+      // Hide Database Sync Status badge to make room for profile box
+      if (dbSyncBadge) dbSyncBadge.style.display = 'none';
 
       // Reveal Secure Transactions Dashboard Section
       consoleSection.style.display = 'block';
@@ -1042,6 +1076,9 @@ function evaluateSessionState() {
     loginBtn.style.display = 'block';
     profileBox.style.display = 'none';
     consoleSection.style.display = 'none';
+    
+    // Restore Database Sync Status badge display when logged out
+    if (dbSyncBadge) dbSyncBadge.style.display = 'flex';
   }
 }
 
@@ -1138,6 +1175,30 @@ function initConsoleSystem() {
     const oldBlock = document.getElementById('wings-restricted-old');
     if (oldBlock) oldBlock.remove();
     wrapper.id = 'wings-restricted-old';
+  }
+
+  // 5. Members Directory Panel
+  const membersPanel = document.getElementById('panel-members-directory');
+  if (membersPanel) {
+    if (role === 'Admin') {
+      membersPanel.innerHTML = getMembersDirectoryDashboardHtml();
+      loadMembersDirectoryList();
+      initMembersDirectoryTriggers();
+    } else {
+      membersPanel.innerHTML = getRestrictedAccessOverlay('Members Directory', 'Only Admin accounts can add, edit, or delete member accounts.');
+    }
+  }
+
+  // 6. Event Planner Panel
+  const eventPlannerPanel = document.getElementById('panel-create-events');
+  if (eventPlannerPanel) {
+    if (role === 'Admin') {
+      eventPlannerPanel.innerHTML = getEventPlannerDashboardHtml();
+      loadEventPlannerList();
+      initEventPlannerTriggers();
+    } else {
+      eventPlannerPanel.innerHTML = getRestrictedAccessOverlay('Event Planner', 'Only Admin accounts can create or schedule new events.');
+    }
   }
 }
 
@@ -1678,6 +1739,23 @@ function showToast(title, body, type = 'success') {
     toast.style.animation = 'slideInToast 0.3s ease reverse forwards';
     setTimeout(() => { toast.remove(); }, 300);
   }, 4000);
+}
+
+// --- LOADING OVERLAY HELPERS ---
+function showLoader(text = 'Loading...') {
+  const loadingOverlay = document.getElementById('loading-overlay');
+  const loadingText = document.getElementById('loading-text');
+  if (loadingOverlay && loadingText) {
+    loadingText.textContent = text;
+    loadingOverlay.classList.add('active');
+  }
+}
+
+function hideLoader() {
+  const loadingOverlay = document.getElementById('loading-overlay');
+  if (loadingOverlay) {
+    loadingOverlay.classList.remove('active');
+  }
 }
 
 // ==============================================
@@ -2337,6 +2415,29 @@ const CloudApiService = {
     }
   },
 
+  addPerson: async (newPerson) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('persons')
+        .insert([newPerson]);
+      if (error) throw error;
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      await firebaseDbInstance.collection('persons').doc(newPerson.id).set(newPerson);
+    }
+  },
+
+  deletePerson: async (id) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('persons')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      await firebaseDbInstance.collection('persons').doc(id).delete();
+    }
+  },
+
   getDepartments: async () => {
     if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
       try {
@@ -2423,6 +2524,29 @@ const CloudApiService = {
       if (error) throw error;
     } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
       await firebaseDbInstance.collection('events').doc(id).update(updatedData);
+    }
+  },
+
+  addEvent: async (newEvent) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('events')
+        .insert([newEvent]);
+      if (error) throw error;
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      await firebaseDbInstance.collection('events').doc(newEvent.id).set(newEvent);
+    }
+  },
+
+  deleteEvent: async (id) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('events')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      await firebaseDbInstance.collection('events').doc(id).delete();
     }
   },
 
@@ -2694,8 +2818,30 @@ function updateCommitteesList() {
     };
   }
 
+  // Helper to determine role sorting priority hierarchy
+  const getRolePriority = (roleName) => {
+    if (!roleName) return 999;
+    const roleLower = roleName.toLowerCase().trim();
+    
+    if (roleLower === 'president') return 0;
+    if (roleLower === 'vice president') return 1;
+    if (roleLower.includes('secretary') && !roleLower.includes('asst')) return 2; // Gen. Secretary, Secretary, etc.
+    if (roleLower === 'treasurer') return 3;
+    if (roleLower.includes('asst') && (roleLower.includes('cultural') || roleLower.includes('culturul'))) return 4;
+    if (roleLower.includes('asst') && roleLower.includes('social')) return 5;
+    if (roleLower.includes('asst') && roleLower.includes('sports')) return 6;
+    if (roleLower.includes('asst') && roleLower.includes('library')) return 7;
+    if (roleLower.includes('member')) return 8;
+    return 99; // Fallback for other custom administrative roles
+  };
+
   if (execList && general.executiveCommittee) {
-    execList.innerHTML = general.executiveCommittee.map(m => 
+    // Sort hierarchy priority ascending
+    const sortedExec = [...general.executiveCommittee].sort((a, b) => {
+      return getRolePriority(a.role) - getRolePriority(b.role);
+    });
+
+    execList.innerHTML = sortedExec.map(m => 
       `<li><span>${m.name}</span> <span class="role">${m.role}</span></li>`
     ).join('');
   }
@@ -2705,6 +2851,543 @@ function updateCommitteesList() {
     ).join('');
   }
 }
+
+// --- WRITE-THROUGH MUTATION HELPERS ---
+async function addPersonRecord(newPerson) {
+  databasePersons.push(newPerson);
+  localStorage.setItem(STORAGE_KEYS.PERSONS, JSON.stringify(databasePersons));
+  updateHeroStatistics();
+  
+  if (activeCloudProvider !== 'none') {
+    try {
+      await CloudApiService.addPerson(newPerson);
+      console.log('[Udayan Write] Cloud sync successful for Person Addition: ' + newPerson.id);
+    } catch (err) {
+      console.error('[Udayan Write] Cloud person addition failed:', err);
+    }
+  }
+}
+
+async function deletePersonRecord(id) {
+  databasePersons = databasePersons.filter(p => p.id !== id);
+  localStorage.setItem(STORAGE_KEYS.PERSONS, JSON.stringify(databasePersons));
+  updateHeroStatistics();
+  
+  if (activeCloudProvider !== 'none') {
+    try {
+      await CloudApiService.deletePerson(id);
+      console.log('[Udayan Write] Cloud sync successful for Person Deletion: ' + id);
+    } catch (err) {
+      console.error('[Udayan Write] Cloud person deletion failed:', err);
+    }
+  }
+}
+
+async function addEventRecord(newEvent) {
+  databaseEvents.push(newEvent);
+  localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(databaseEvents));
+  
+  if (activeCloudProvider !== 'none') {
+    try {
+      await CloudApiService.addEvent(newEvent);
+      console.log('[Udayan Write] Cloud sync successful for Event Addition: ' + newEvent.id);
+    } catch (err) {
+      console.error('[Udayan Write] Cloud event addition failed:', err);
+    }
+  }
+}
+
+async function deleteEventRecord(id) {
+  databaseEvents = databaseEvents.filter(e => e.id !== id);
+  localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(databaseEvents));
+  
+  if (activeCloudProvider !== 'none') {
+    try {
+      await CloudApiService.deleteEvent(id);
+      console.log('[Udayan Write] Cloud sync successful for Event Deletion: ' + id);
+    } catch (err) {
+      console.error('[Udayan Write] Cloud event deletion failed:', err);
+    }
+  }
+}
+
+// --- DYNAMIC HTML DASHBOARDS ---
+function getMembersDirectoryDashboardHtml() {
+  return `
+    <div>
+      <div class="console-filter-bar" style="margin-bottom: 20px;">
+        <input type="text" class="console-search-input" id="member-dir-search" placeholder="Search members by name...">
+        <select id="member-dir-cat-filter" class="form-control" style="width: 160px; padding: 10px;">
+          <option value="all">All Categories</option>
+          <option value="Member">Member</option>
+          <option value="Student">Student</option>
+          <option value="Teacher">Teacher</option>
+          <option value="Well Wishers">Well Wishers</option>
+        </select>
+        <button class="btn btn-primary" id="btn-add-member-trigger" style="font-size: 0.85rem; padding: 10px 16px;">
+          <i class="fa-solid fa-user-plus"></i> Add New Member
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="transaction-table">
+          <thead>
+            <tr>
+              <th>Member Name</th>
+              <th>Category</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Departments</th>
+              <th>Cleared Upto</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="member-dir-table-body">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function getEventPlannerDashboardHtml() {
+  return `
+    <div>
+      <div class="console-filter-bar" style="margin-bottom: 20px;">
+        <p style="flex-grow: 1; font-weight: 500;" id="event-planner-count-info">0 Scheduled Events</p>
+        <button class="btn btn-primary" id="btn-schedule-event-trigger" style="font-size: 0.85rem; padding: 10px 16px;">
+          <i class="fa-solid fa-calendar-plus"></i> Schedule New Event
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="transaction-table">
+          <thead>
+            <tr>
+              <th>Event Title</th>
+              <th>Date</th>
+              <th>Venue / Location</th>
+              <th>Description</th>
+              <th>Roster Size</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="event-planner-table-body">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// --- MEMBERS DIRECTORY OPERATION ---
+function loadMembersDirectoryList() {
+  const tbody = document.getElementById('member-dir-table-body');
+  if (!tbody) return;
+
+  const searchInput = document.getElementById('member-dir-search');
+  const catFilter = document.getElementById('member-dir-cat-filter');
+
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const cat = catFilter ? catFilter.value : 'all';
+
+  let filtered = databasePersons;
+  if (query) {
+    filtered = filtered.filter(p => p.name.toLowerCase().includes(query));
+  }
+  if (cat !== 'all') {
+    filtered = filtered.filter(p => p.category === cat);
+  }
+
+  tbody.innerHTML = '';
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No members matched selection filter.</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(p => {
+    const deptBadges = (p.departments || []).map(dId => {
+      let icon = '🏢';
+      let shortName = dId;
+      if (dId.includes('art-school')) { icon = '🎨'; shortName = 'Art'; }
+      else if (dId.includes('recitation')) { icon = '🗣️'; shortName = 'Poem'; }
+      else if (dId.includes('ghungur')) { icon = '💃'; shortName = 'Dance'; }
+      else if (dId.includes('library')) { icon = '📚'; shortName = 'Lib'; }
+      else if (dId.includes('yogasana')) { icon = '🧘‍♀️'; shortName = 'Yoga'; }
+      else if (dId.includes('pranayam')) { icon = '💨'; shortName = 'Breath'; }
+      else if (dId.includes('park')) { icon = '🌳'; shortName = 'Park'; }
+      else if (dId.includes('dispensary')) { icon = '🏥'; shortName = 'Med'; }
+      else if (dId.includes('general')) { icon = '📋'; shortName = 'Gen'; }
+      return `<span style="font-size:0.7rem; background:var(--background); border:1px solid var(--border); border-radius:4px; padding:2px 6px; margin-right:4px;">${icon} ${shortName}</span>`;
+    }).join('');
+
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${p.name}</strong></td>
+        <td><span class="badge badge-${p.category.toLowerCase().replace(' ', '')}">${p.category}</span></td>
+        <td>${p.phone}</td>
+        <td><a href="mailto:${p.email || ''}" style="color:var(--primary); text-decoration:none;">${p.email || 'N/A'}</a></td>
+        <td><div style="display:flex; flex-wrap:wrap; gap:4px;">${deptBadges || 'None'}</div></td>
+        <td>${p.subscriptionClearedUpto || 'N/A'}</td>
+        <td>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary" onclick="openMemberAddEditModal('${p.id}')" style="font-size:0.75rem; padding:6px 10px;"><i class="fa-solid fa-user-pen"></i> Edit</button>
+            <button class="btn btn-secondary" onclick="deleteMember('${p.id}', '${p.name}')" style="font-size:0.75rem; padding:6px 10px; color:var(--error); border-color:var(--error);"><i class="fa-solid fa-trash-can"></i> Delete</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+window.deleteMember = async function(id, name) {
+  const confirmDel = confirm(`Are you sure you want to permanently delete member: "${name}"?`);
+  if (!confirmDel) return;
+
+  showLoader('Deleting member profile...');
+  try {
+    await deletePersonRecord(id);
+    hideLoader();
+    showToast('Member Deleted', `"${name}" was deleted successfully.`, 'success');
+    loadMembersDirectoryList();
+  } catch(err) {
+    hideLoader();
+    showToast('Deletion Failed', err.message, 'error');
+  }
+};
+
+function initMembersDirectoryTriggers() {
+  const search = document.getElementById('member-dir-search');
+  const cat = document.getElementById('member-dir-cat-filter');
+  const addBtn = document.getElementById('btn-add-member-trigger');
+
+  if (search) search.addEventListener('input', loadMembersDirectoryList);
+  if (cat) cat.addEventListener('change', loadMembersDirectoryList);
+  if (addBtn) addBtn.addEventListener('click', () => openMemberAddEditModal());
+}
+
+// --- EVENT PLANNER OPERATION ---
+function loadEventPlannerList() {
+  const tbody = document.getElementById('event-planner-table-body');
+  const countInfo = document.getElementById('event-planner-count-info');
+  if (!tbody) return;
+
+  databaseEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (countInfo) {
+    countInfo.textContent = `${databaseEvents.length} Scheduled Events`;
+  }
+
+  tbody.innerHTML = '';
+  if (databaseEvents.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No scheduled events.</td></tr>`;
+    return;
+  }
+
+  databaseEvents.forEach(evt => {
+    const rosterSize = evt.participants ? evt.participants.length : 0;
+    const dateFormatted = new Date(evt.date).toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
+
+    tbody.innerHTML += `
+      <tr>
+        <td>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <img src="${evt.imageUrl || 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=80&q=80'}" style="width:40px; height:30px; object-fit:cover; border-radius:4px; border:1px solid var(--border);" alt="cover">
+            <strong>${evt.title}</strong>
+          </div>
+        </td>
+        <td>${dateFormatted}</td>
+        <td><i class="fa-solid fa-location-dot" style="color:var(--primary); margin-right:4px;"></i> ${evt.location || 'Lake Road'}</td>
+        <td><div style="max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${evt.description}">${evt.description}</div></td>
+        <td><span style="font-weight:700; color:var(--primary);">${rosterSize}</span> members</td>
+        <td>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary" onclick="openEventAddEditModal('${evt.id}')" style="font-size:0.75rem; padding:6px 10px;"><i class="fa-solid fa-calendar-days"></i> Edit</button>
+            <button class="btn btn-secondary" onclick="deleteEvent('${evt.id}', '${evt.title}')" style="font-size:0.75rem; padding:6px 10px; color:var(--error); border-color:var(--error);"><i class="fa-solid fa-trash-can"></i> Cancel</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+window.deleteEvent = async function(id, title) {
+  const confirmDel = confirm(`Are you sure you want to permanently cancel and delete event: "${title}"?`);
+  if (!confirmDel) return;
+
+  showLoader('Scheduling cancellation...');
+  try {
+    await deleteEventRecord(id);
+    hideLoader();
+    showToast('Event Deleted', `"${title}" was removed successfully.`, 'success');
+    loadEventPlannerList();
+    
+    syncAndRenderEvents();
+    updateHeroEventCard();
+  } catch(err) {
+    hideLoader();
+    showToast('Deletion Failed', err.message, 'error');
+  }
+};
+
+function initEventPlannerTriggers() {
+  const addBtn = document.getElementById('btn-schedule-event-trigger');
+  if (addBtn) addBtn.addEventListener('click', () => openEventAddEditModal());
+}
+
+// --- ON-SITE DYNAMIC MODAL OVERLAYS (Option B) ---
+window.openMemberAddEditModal = function(memberId = null) {
+  const modalOverlay = document.getElementById('site-modal-overlay');
+  const modalTitle = document.getElementById('site-modal-title');
+  const modalBody = document.getElementById('site-modal-body');
+
+  const isEdit = !!memberId;
+  const member = isEdit ? databasePersons.find(p => p.id === memberId) : null;
+
+  modalTitle.textContent = isEdit ? `✏️ Edit Member Profile` : `👤 Add New Member`;
+
+  let departments = [];
+  try {
+    departments = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
+  } catch(e) {}
+  if (departments.length === 0) {
+    departments = SEED_DEPARTMENTS;
+  }
+
+  const deptCheckboxes = departments.map(d => {
+    const checked = isEdit && member.departments && member.departments.includes(d.id) ? 'checked' : '';
+    return `
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; user-select: none;">
+        <input type="checkbox" name="member-dept-checkbox" value="${d.id}" id="chk-dept-${d.id}" ${checked} style="width:16px; height:16px; accent-color:var(--primary);">
+        <label for="chk-dept-${d.id}" style="font-size:0.85rem; margin-bottom:0; text-transform:none;">${d.icon || '🏢'} ${d.name} (${d.category})</label>
+      </div>
+    `;
+  }).join('');
+
+  modalBody.innerHTML = `
+    <form id="member-add-edit-form" novalidate>
+      <div class="form-row" style="display:flex; gap:12px; margin-bottom:16px;">
+        <div class="form-group" style="flex:1.5; margin-bottom:0;">
+          <label for="m-form-name">Full Name</label>
+          <input type="text" id="m-form-name" class="form-control" placeholder="Arundhati Sen" required value="${isEdit ? member.name : ''}">
+        </div>
+        <div class="form-group" style="flex:1; margin-bottom:0;">
+          <label for="m-form-category">Category</label>
+          <select id="m-form-category" class="form-control" required style="padding:10px;">
+            <option value="Member" ${isEdit && member.category === 'Member' ? 'selected' : ''}>Member</option>
+            <option value="Student" ${isEdit && member.category === 'Student' ? 'selected' : ''}>Student</option>
+            <option value="Teacher" ${isEdit && member.category === 'Teacher' ? 'selected' : ''}>Teacher</option>
+            <option value="Well Wishers" ${isEdit && member.category === 'Well Wishers' ? 'selected' : ''}>Well Wishers</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row" style="display:flex; gap:12px; margin-bottom:16px;">
+        <div class="form-group" style="flex:1; margin-bottom:0;">
+          <label for="m-form-phone">Phone Number</label>
+          <input type="tel" id="m-form-phone" class="form-control" placeholder="9876543210" pattern="[0-9]{10}" required value="${isEdit ? member.phone : ''}">
+        </div>
+        <div class="form-group" style="flex:1; margin-bottom:0;">
+          <label for="m-form-email">Email Address</label>
+          <input type="email" id="m-form-email" class="form-control" placeholder="arundhati.sen@gmail.com" required value="${isEdit ? member.email || '' : ''}">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label for="m-form-cleared">Cleared Upto (Dues Month)</label>
+        <input type="month" id="m-form-cleared" class="form-control" required value="${isEdit ? member.subscriptionClearedUpto || '2026-05' : '2026-05'}">
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label style="font-weight: 700; margin-bottom: 8px; display: block;">Assign Wings / Departments</label>
+        <div style="max-height: 140px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; background: var(--background);">
+          ${deptCheckboxes}
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="button" class="btn btn-secondary" onclick="closeSiteModal()" style="flex: 1; justify-content: center; padding: 12px;"><i class="fa-solid fa-xmark"></i> Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 12px;"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+      </div>
+    </form>
+  `;
+
+  modalOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  const form = document.getElementById('member-add-edit-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('m-form-name').value.trim();
+    const cat = document.getElementById('m-form-category').value;
+    const phone = document.getElementById('m-form-phone').value.trim();
+    const email = document.getElementById('m-form-email').value.trim();
+    const cleared = document.getElementById('m-form-cleared').value;
+
+    if (!name || !cat || !phone || !email || !cleared) {
+      showToast('Validation Error', 'All fields are required.', 'error');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      showToast('Validation Error', 'Enter a valid email address.', 'error');
+      return;
+    }
+
+    if (phone.length !== 10 || isNaN(phone)) {
+      showToast('Validation Error', 'Phone must be exactly 10 digits.', 'error');
+      return;
+    }
+
+    const checkboxes = document.querySelectorAll('input[name="member-dept-checkbox"]:checked');
+    const selectedDepts = Array.from(checkboxes).map(cb => cb.value);
+
+    showLoader(isEdit ? 'Saving profile changes...' : 'Creating member profile...');
+
+    try {
+      if (isEdit) {
+        await updatePersonRecord(memberId, {
+          name,
+          category: cat,
+          phone,
+          email,
+          subscriptionClearedUpto: cleared,
+          departments: selectedDepts
+        });
+        showToast('Profile Updated', `${name}'s profile was successfully updated.`, 'success');
+      } else {
+        const newId = `p-${Date.now()}`;
+        await addPersonRecord({
+          id: newId,
+          name,
+          category: cat,
+          phone,
+          email,
+          subscriptionClearedUpto: cleared,
+          departments: selectedDepts,
+          lastSubPaidOn: new Date().toISOString().split('T')[0],
+          lastSubBillNo: `BILL-2026-${Math.floor(100 + Math.random() * 900)}`
+        });
+        showToast('Member Created', `${name} was successfully enrolled.`, 'success');
+      }
+      hideLoader();
+      closeSiteModal();
+      loadMembersDirectoryList();
+      updateHeroStatistics();
+    } catch(err) {
+      hideLoader();
+      showToast('Transaction Failed', err.message, 'error');
+    }
+  });
+};
+
+window.openEventAddEditModal = function(eventId = null) {
+  const modalOverlay = document.getElementById('site-modal-overlay');
+  const modalTitle = document.getElementById('site-modal-title');
+  const modalBody = document.getElementById('site-modal-body');
+
+  const isEdit = !!eventId;
+  const event = isEdit ? databaseEvents.find(e => e.id === eventId) : null;
+
+  modalTitle.textContent = isEdit ? `✏️ Edit Event Details` : `📅 Schedule New Event`;
+
+  modalBody.innerHTML = `
+    <form id="event-add-edit-form" novalidate>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label for="e-form-title">Event Title</label>
+        <input type="text" id="e-form-title" class="form-control" placeholder="Rabindra Jayanti Annual Meet" required value="${isEdit ? event.title : ''}">
+      </div>
+
+      <div class="form-row" style="display:flex; gap:12px; margin-bottom:16px;">
+        <div class="form-group" style="flex:1; margin-bottom:0;">
+          <label for="e-form-date">Event Date</label>
+          <input type="date" id="e-form-date" class="form-control" required value="${isEdit ? event.date : ''}">
+        </div>
+        <div class="form-group" style="flex:1.2; margin-bottom:0;">
+          <label for="e-form-location">Venue / Location</label>
+          <input type="text" id="e-form-location" class="form-control" placeholder="Main Hall, Lake Road" required value="${isEdit ? event.location || '' : ''}">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label for="e-form-image">Event Cover Image URL</label>
+        <input type="url" id="e-form-image" class="form-control" placeholder="https://images.unsplash.com/photo... (leave empty for default)" value="${isEdit ? event.imageUrl || '' : ''}">
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label for="e-form-desc">Event Description</label>
+        <textarea id="e-form-desc" class="form-control" placeholder="Provide a brief summary of planned activities..." required style="height: 90px;">${isEdit ? event.description || '' : ''}</textarea>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="button" class="btn btn-secondary" onclick="closeSiteModal()" style="flex: 1; justify-content: center; padding: 12px;"><i class="fa-solid fa-xmark"></i> Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 12px;"><i class="fa-solid fa-floppy-disk"></i> ${isEdit ? 'Update Event' : 'Schedule Event'}</button>
+      </div>
+    </form>
+  `;
+
+  modalOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  const form = document.getElementById('event-add-edit-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('e-form-title').value.trim();
+    const date = document.getElementById('e-form-date').value;
+    const location = document.getElementById('e-form-location').value.trim();
+    const description = document.getElementById('e-form-desc').value.trim();
+    const imageUrl = document.getElementById('e-form-image').value.trim();
+
+    if (!title || !date || !location || !description) {
+      showToast('Validation Error', 'All fields are required.', 'error');
+      return;
+    }
+
+    showLoader(isEdit ? 'Updating event parameters...' : 'Saving new event schedule...');
+
+    const defaultImg = 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80';
+
+    try {
+      if (isEdit) {
+        await updateEventRecord(eventId, {
+          title,
+          date,
+          location,
+          description,
+          imageUrl: imageUrl || defaultImg
+        });
+        showToast('Event Updated', `"${title}" details were successfully updated.`, 'success');
+      } else {
+        const newId = `e-${Date.now()}`;
+        await addEventRecord({
+          id: newId,
+          title,
+          date,
+          location,
+          description,
+          imageUrl: imageUrl || defaultImg,
+          participants: []
+        });
+        showToast('Event Scheduled', `"${title}" has been scheduled.`, 'success');
+      }
+      hideLoader();
+      closeSiteModal();
+      loadEventPlannerList();
+      
+      syncAndRenderEvents();
+      updateHeroEventCard();
+    } catch(err) {
+      hideLoader();
+      showToast('Transaction Failed', err.message, 'error');
+    }
+  });
+};
 
 
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Udayan | Empowering & Connecting Our Community</title>
-  <meta name="description" content="Welcome to Udayan, a premier social organisation driving cultural enrichment, physical wellness, social service, and community learning since 2012.">
+  <meta name="description" content="Welcome to Udayan, a premier social organisation driving cultural enrichment, physical wellness, social service, and community learning since 1950.">
   
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="styles.css">
@@ -21,7 +21,7 @@
     <div class="container nav-wrapper">
       <a href="#hero" class="brand" id="nav-brand-link">
         <div class="brand-logo-sun" title="Udayan Rising Sun">
-          <i class="fa-solid fa-sun"></i>
+          <img src="logo.jpg" alt="Udayan Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
         </div>
         <div class="brand-text">Udayan</div>
       </a>
@@ -139,8 +139,14 @@
         <button class="console-tab-btn active" data-panel="panel-subscriptions" id="tab-subscriptions">
           <i class="fa-solid fa-credit-card"></i> Subscriptions Ledger
         </button>
+        <button class="console-tab-btn" data-panel="panel-members-directory" id="tab-members-directory">
+          <i class="fa-solid fa-users"></i> Members Directory
+        </button>
         <button class="console-tab-btn" data-panel="panel-events-registry" id="tab-events-registry">
           <i class="fa-solid fa-calendar-check"></i> Event Registries
+        </button>
+        <button class="console-tab-btn" data-panel="panel-create-events" id="tab-create-events">
+          <i class="fa-solid fa-calendar-plus"></i> Event Planner
         </button>
         <button class="console-tab-btn" data-panel="panel-inquiries" id="tab-inquiries">
           <i class="fa-solid fa-inbox"></i> Enrolment Inbox
@@ -408,6 +414,16 @@
         </div>
       </div>
 
+      <!-- Tab Panel 5: Members Directory (Admin only) -->
+      <div class="console-view-panel" id="panel-members-directory">
+        <!-- Renders Dynamically in script.js -->
+      </div>
+
+      <!-- Tab Panel 6: Event Planner (Admin only) -->
+      <div class="console-view-panel" id="panel-create-events">
+        <!-- Renders Dynamically in script.js -->
+      </div>
+
     </div>
   </section>
 
@@ -444,7 +460,7 @@
       <div class="about-content">
         <h2>Who We Are</h2>
         <h3>Connecting Generations, Building Careers</h3>
-        <p>Founded in 2012, Udayan stands as a premier non-profit social organization. We focus on bridging communities through specialized sports clusters, classic art academies, a public library, and structured social services.</p>
+        <p>Founded on 3rd August 1950, Udayan stands as a premier non-profit social organization. We focus on bridging communities through specialized sports clusters, classic art academies, a public library, and structured social services.</p>
         <p>Our operations are designed with absolute clarity, offering administrative excellence and secure local database integrations to run cultural, sports, and relief drives without friction.</p>
         
         <!-- Committee structure -->
@@ -711,7 +727,7 @@
       <div class="footer-brand">
         <a href="#hero" class="brand" id="footer-brand-link">
           <div class="brand-logo-sun">
-            <i class="fa-solid fa-sun"></i>
+            <img src="logo.jpg" alt="Udayan Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
           </div>
           <div class="brand-text" style="color: white;">Udayan</div>
         </a>
@@ -841,6 +857,14 @@
   <!-- 12. TOAST NOTIFICATIONS CONTAINER -->
   <!-- ============================================== -->
   <div class="toast-container" id="site-toast-container"></div>
+
+  <!-- ============================================== -->
+  <!-- 13. FULL-SCREEN LOADING OVERLAY -->
+  <!-- ============================================== -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">Loading...</div>
+  </div>
 
   <!-- Supabase CDN Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
