@@ -13,6 +13,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <!-- Ambient Glassmorphic Background Glows -->
+  <div class="glow-blob glow-blob-1"></div>
+  <div class="glow-blob glow-blob-2"></div>
+  <div class="glow-blob glow-blob-3"></div>
 
   <!-- ============================================== -->
   <!-- 1. STICKY HEADER & NAVIGATION -->
@@ -30,6 +34,7 @@
         <ul class="nav-menu" id="nav-menu-bar">
           <li><a href="#hero" class="nav-link active" id="link-hero">Home</a></li>
           <li><a href="#about" class="nav-link" id="link-about">About Us</a></li>
+          <li><a href="#leadership" class="nav-link" id="link-leadership">Leadership</a></li>
           <li><a href="#departments" class="nav-link" id="link-depts">Our Wings</a></li>
           <li><a href="#events" class="nav-link" id="link-events">Events</a></li>
           <li><a href="#donation" class="nav-link" id="link-donation">Donate</a></li>
@@ -105,7 +110,7 @@
 
       <div class="hero-image-wrapper">
         <div class="hero-art-card">
-          <div class="art-inner">
+          <div class="art-inner" id="hero-event-card-inner">
             <div class="art-header">
               <span class="art-tag">Next Event</span>
               <span class="art-icon">📅</span>
@@ -462,24 +467,60 @@
         <h3>Connecting Generations, Building Careers</h3>
         <p>Founded on 3rd August 1950, Udayan stands as a premier non-profit social organization. We focus on bridging communities through specialized sports clusters, classic art academies, a public library, and structured social services.</p>
         <p>Our operations are designed with absolute clarity, offering administrative excellence and secure local database integrations to run cultural, sports, and relief drives without friction.</p>
-        
-        <!-- Committee structure -->
-        <div class="committees-grid">
-          <div class="committee-list">
-            <h4><i class="fa-solid fa-user-tie"></i> Executive Committee</h4>
-            <ul id="executive-committee-list">
-              <li><span>Subrata Dey</span> <span class="role">President</span></li>
-              <li><span>Bimal Krishna Roy</span> <span class="role">Gen. Secretary</span></li>
-              <li><span>Sulata Ghosh</span> <span class="role">Treasurer</span></li>
-            </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- 3.5 GOVERNING BODY & LEADERSHIP SECTION -->
+  <!-- ============================================== -->
+  <section class="leadership" id="leadership">
+    <div class="container">
+      <div class="section-header">
+        <h2>Governing Body & Leadership</h2>
+        <p>Our organization is guided by a dedicated team of administrative officers, committee leaders, and active community volunteers.</p>
+      </div>
+
+      <div class="leadership-grid">
+        <!-- Executive Committee Card -->
+        <div class="leadership-card">
+          <div class="leadership-card-media">
+            <div class="leadership-card-icon"><i class="fa-solid fa-user-tie"></i></div>
+            <span class="leadership-card-tag">Governing Body</span>
           </div>
-          <div class="committee-list">
-            <h4><i class="fa-solid fa-users"></i> Sub-Committees</h4>
-            <ul id="sub-committee-list">
-              <li><span>Arundhati Sen</span> <span class="role">Cultural Convener</span></li>
-              <li><span>Rohan Banerjee</span> <span class="role">Sports Coordinator</span></li>
-              <li><span>Keya Das</span> <span class="role">Student Coordinator</span></li>
-            </ul>
+          <div class="leadership-card-content">
+            <h3>Executive Committee</h3>
+            <p>Formulates organizational policies, audits budgets, and oversees volunteer campaigns to steer Udayan's community wellness and healthcare drives.</p>
+            
+            <div class="member-roster-box">
+              <h4>Committee Members</h4>
+              <ul id="executive-committee-list" class="roster-list">
+                <li><span>Subrata Dey</span> <span class="role">President</span></li>
+                <li><span>Bimal Krishna Roy</span> <span class="role">Gen. Secretary</span></li>
+                <li><span>Sulata Ghosh</span> <span class="role">Treasurer</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- General Members / Sub-Committees Card -->
+        <div class="leadership-card">
+          <div class="leadership-card-media">
+            <div class="leadership-card-icon"><i class="fa-solid fa-users"></i></div>
+            <span class="leadership-card-tag">Volunteer Coordinators</span>
+          </div>
+          <div class="leadership-card-content">
+            <h3>General Members & Sub-Committees</h3>
+            <p>A collaborative group of registered community volunteers, coordinators, and patrons who actively manage Udayan's sports clusters, library access, and daily operations.</p>
+            
+            <div class="member-roster-box">
+              <h4>Sub-Committee Coordinators</h4>
+              <ul id="sub-committee-list" class="roster-list">
+                <li><span>Arundhati Sen</span> <span class="role">Cultural Convener</span></li>
+                <li><span>Rohan Banerjee</span> <span class="role">Sports Coordinator</span></li>
+                <li><span>Keya Das</span> <span class="role">Student Coordinator</span></li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

@@ -254,7 +254,7 @@ const SEED_EVENTS = [
     date: '2026-06-05',
     location: 'Dispensary Main Hall',
     description: 'Our monthly general medical checkup day in the dispensary. Providing free consultations, blood sugar tests, and basic medications.',
-    imageUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://lh3.googleusercontent.com/d/1KDJsoQsLgk9BCXzORx3xjd7GLW9XD3ws',
     participants: ['p-2', 'p-3', 'p-6']
   },
   {
@@ -431,12 +431,18 @@ function initDatabaseState() {
   // Cover image migration layer for cached browser sessions
   let updatedEvents = false;
   databaseEvents.forEach(evt => {
+    // Force override local storage cache if e-2 still holds the legacy unsplash placeholder link
+    if (evt.id === 'e-2' && evt.imageUrl && evt.imageUrl.includes('unsplash.com/photo-1576091160550')) {
+      evt.imageUrl = 'https://lh3.googleusercontent.com/d/1KDJsoQsLgk9BCXzORx3xjd7GLW9XD3ws';
+      updatedEvents = true;
+    }
+
     if (!evt.imageUrl) {
       updatedEvents = true;
       if (evt.id === 'e-1' || evt.title.includes('Yoga') || evt.title.includes('Pranayam')) {
         evt.imageUrl = 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80';
       } else if (evt.id === 'e-2' || evt.title.includes('Health') || evt.title.includes('Clinic')) {
-        evt.imageUrl = 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80';
+        evt.imageUrl = 'https://lh3.googleusercontent.com/d/1KDJsoQsLgk9BCXzORx3xjd7GLW9XD3ws';
       } else {
         evt.imageUrl = 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80';
       }
@@ -468,7 +474,7 @@ function syncAndRenderWings() {
   try {
     const rawData = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
     if (rawData) {
-      departments = JSON.parse(rawData).filter(d => d.id !== 'general');
+      departments = JSON.parse(rawData).filter(d => d.id !== 'general' && !(d.id || '').toLowerCase().includes('executive') && !(d.id || '').toLowerCase().includes('general') && !(d.name || '').toLowerCase().includes('executive') && !(d.name || '').toLowerCase().includes('general'));
     }
   } catch (e) {
     console.warn('Could not read departments storage.');
@@ -564,8 +570,6 @@ function syncAndRenderEvents() {
   const today = new Date().toISOString().split('T')[0];
   databaseEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  const defaultImg = 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80';
-
   eventsGrid.innerHTML = '';
   databaseEvents.forEach(evt => {
     const status = evt.date < today ? 'past' : 'upcoming';
@@ -576,7 +580,7 @@ function syncAndRenderEvents() {
     eventsGrid.innerHTML += `
       <div class="event-card ${status === 'past' ? 'past' : ''}">
         <div class="event-card-media">
-          <img src="${evt.imageUrl || defaultImg}" alt="${evt.title} showcase" loading="lazy">
+          <img src="${getEventCoverImage(evt)}" alt="${evt.title} showcase" loading="lazy">
           <span class="event-date-badge">
             <i class="fa-solid ${status === 'past' ? 'fa-calendar-check' : 'fa-hourglass-half'}"></i>
             ${status === 'past' ? 'Past' : 'Upcoming'} Event
@@ -1758,6 +1762,63 @@ function hideLoader() {
   }
 }
 
+// --- DYNAMIC EVENT COVER IMAGE DEDUCTION ---
+function getEventCoverImage(evt) {
+  if (evt && evt.imageUrl && evt.imageUrl.trim() !== '') {
+    return evt.imageUrl;
+  }
+  
+  const title = (evt && evt.title ? evt.title.toLowerCase() : '');
+  const desc = (evt && evt.description ? evt.description.toLowerCase() : '');
+  
+  if (title.includes('yoga') || title.includes('pranayam') || title.includes('wellness') || desc.includes('breathing')) {
+    return 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80';
+  }
+  if (title.includes('health') || title.includes('clinic') || title.includes('screening') || title.includes('medical') || desc.includes('doctor')) {
+    return 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80';
+  }
+  if (title.includes('art') || title.includes('school') || title.includes('paint') || desc.includes('sketch')) {
+    return 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=600&q=80';
+  }
+  if (title.includes('rabindra') || title.includes('celebration') || title.includes('annual') || title.includes('cultural') || desc.includes('dance')) {
+    return 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80';
+  }
+  
+  return 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=600&q=80';
+}
+
+// --- AUTOMATIC GOOGLE DRIVE SHARE LINK CONVERTER ---
+function convertGoogleDriveLink(url) {
+  if (!url) return '';
+  url = url.trim();
+  
+  // 1. Matches standard file share: https://drive.google.com/file/d/FILE_ID/view...
+  const driveRegex1 = /https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+  
+  // 2. Matches alternative share: https://drive.google.com/open?id=FILE_ID or /uc?id=FILE_ID...
+  const driveRegex2 = /https:\/\/drive\.google\.com\/(?:open|uc)\?.*id=([a-zA-Z0-9_-]+)/;
+  
+  // 3. Matches legacy API stream: https://docs.google.com/uc?export=download&id=FILE_ID
+  const driveRegex3 = /https:\/\/docs\.google\.com\/uc\?.*id=([a-zA-Z0-9_-]+)/;
+  
+  const match1 = url.match(driveRegex1);
+  if (match1 && match1[1]) {
+    return `https://lh3.googleusercontent.com/d/${match1[1]}`;
+  }
+  
+  const match2 = url.match(driveRegex2);
+  if (match2 && match2[1]) {
+    return `https://lh3.googleusercontent.com/d/${match2[1]}`;
+  }
+
+  const match3 = url.match(driveRegex3);
+  if (match3 && match3[1]) {
+    return `https://lh3.googleusercontent.com/d/${match3[1]}`;
+  }
+  
+  return url;
+}
+
 // ==============================================
 // WINGS LEDGER & DYNAMIC MODIFICATIONS CONTROLLERS
 // ==============================================
@@ -1768,7 +1829,7 @@ function loadWingsLedger(role) {
   try {
     const rawData = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
     if (rawData) {
-      departments = JSON.parse(rawData).filter(d => d.id !== 'general');
+      departments = JSON.parse(rawData).filter(d => d.id !== 'general' && !(d.id || '').toLowerCase().includes('executive') && !(d.id || '').toLowerCase().includes('general') && !(d.name || '').toLowerCase().includes('executive') && !(d.name || '').toLowerCase().includes('general'));
     }
   } catch (e) {
     console.warn('Could not read departments array.');
@@ -1849,7 +1910,8 @@ function initWingsLedgerControls(role) {
 
   // Add Photo trigger
   addPhotoBtn.addEventListener('click', () => {
-    const url = document.getElementById('wing-new-photo-url').value.trim();
+    const rawUrl = document.getElementById('wing-new-photo-url').value.trim();
+    const url = convertGoogleDriveLink(rawUrl);
     const caption = document.getElementById('wing-new-photo-caption').value.trim() || 'Gallery Showcase';
 
     if (!url) {
@@ -1902,7 +1964,22 @@ function initWingsLedgerControls(role) {
       } catch(err) {}
 
       if (depts.length === 0) {
-        depts = SEED_DEPARTMENTS.concat(DEPARTMENTS_DB.filter(d => d.id === 'general'));
+        const generalDefault = {
+          id: 'general',
+          name: 'General / Committee',
+          category: 'Others',
+          executiveCommittee: [
+            { name: 'Subrata Dey', role: 'President' },
+            { name: 'Bimal Krishna Roy', role: 'Gen. Secretary' },
+            { name: 'Sulata Ghosh', role: 'Treasurer' }
+          ],
+          subCommittee: [
+            { name: 'Arundhati Sen', role: 'Cultural Convener' },
+            { name: 'Rohan Banerjee', role: 'Sports Coordinator' },
+            { name: 'Keya Das', role: 'Student Coordinator' }
+          ]
+        };
+        depts = SEED_DEPARTMENTS.concat([generalDefault]);
       }
 
       if (mode === 'create') {
@@ -1961,7 +2038,7 @@ function initWingsLedgerControls(role) {
       syncAndRenderWings();
       
       // Update statistics count if new wing was added
-      const rawCount = depts.filter(d => d.id !== 'general').length;
+      const rawCount = depts.filter(d => d.id !== 'general' && !(d.id || '').toLowerCase().includes('executive') && !(d.id || '').toLowerCase().includes('general') && !(d.name || '').toLowerCase().includes('executive') && !(d.name || '').toLowerCase().includes('general')).length;
       document.getElementById('hero-stat-depts').textContent = `${rawCount}+`;
     });
   }
@@ -2498,7 +2575,27 @@ const CloudApiService = {
           .from('events')
           .select('*');
         if (error) throw error;
-        return data;
+        
+        // Unpack imageUrl and location from description
+        return data.map(evt => {
+          const desc = evt.description || '';
+          const imgMatch = desc.match(/\[imageUrl:(.*?)\]/);
+          const locMatch = desc.match(/\[location:(.*?)\]/);
+          
+          const imageUrl = imgMatch ? imgMatch[1] : '';
+          const location = locMatch ? locMatch[1] : '';
+          const cleanDescription = desc
+            .replace(/\[imageUrl:.*?\]/g, '')
+            .replace(/\[location:.*?\]/g, '')
+            .trim();
+            
+          return {
+            ...evt,
+            imageUrl: imageUrl || '',
+            location: location || '',
+            description: cleanDescription
+          };
+        });
       } catch (err) {
         console.error('Supabase fetch events failed:', err);
       }
@@ -2517,9 +2614,27 @@ const CloudApiService = {
 
   updateEvent: async (id, updatedData) => {
     if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const fullEvent = databaseEvents.find(e => e.id === id) || updatedData;
+      
+      const newTitle = updatedData.title !== undefined ? updatedData.title : fullEvent.title;
+      const newDate = updatedData.date !== undefined ? updatedData.date : fullEvent.date;
+      const newParticipants = updatedData.participants !== undefined ? updatedData.participants : fullEvent.participants;
+      
+      const rawDesc = updatedData.description !== undefined ? updatedData.description : (fullEvent.description || '');
+      const rawImg = updatedData.imageUrl !== undefined ? updatedData.imageUrl : (fullEvent.imageUrl || '');
+      const rawLoc = updatedData.location !== undefined ? updatedData.location : (fullEvent.location || '');
+      
+      const packedDesc = `${rawDesc} [imageUrl:${rawImg}][location:${rawLoc}]`;
+      
+      const cleanData = {};
+      if (newTitle !== undefined) cleanData.title = newTitle;
+      if (newDate !== undefined) cleanData.date = newDate;
+      if (newParticipants !== undefined) cleanData.participants = newParticipants;
+      cleanData.description = packedDesc;
+
       const { error } = await supabaseClientInstance
         .from('events')
-        .update(updatedData)
+        .update(cleanData)
         .eq('id', id);
       if (error) throw error;
     } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
@@ -2529,9 +2644,16 @@ const CloudApiService = {
 
   addEvent: async (newEvent) => {
     if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const packedData = {
+        id: newEvent.id,
+        title: newEvent.title,
+        date: newEvent.date,
+        participants: newEvent.participants,
+        description: `${newEvent.description || ''} [imageUrl:${newEvent.imageUrl || ''}][location:${newEvent.location || ''}]`
+      };
       const { error } = await supabaseClientInstance
         .from('events')
-        .insert([newEvent]);
+        .insert([packedData]);
       if (error) throw error;
     } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
       await firebaseDbInstance.collection('events').doc(newEvent.id).set(newEvent);
@@ -2734,7 +2856,7 @@ function updateHeroStatistics() {
     try {
       const rawData = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
       if (rawData) {
-        departments = JSON.parse(rawData).filter(d => d.id !== 'general');
+        departments = JSON.parse(rawData).filter(d => d.id !== 'general' && !(d.id || '').toLowerCase().includes('executive') && !(d.id || '').toLowerCase().includes('general') && !(d.name || '').toLowerCase().includes('executive') && !(d.name || '').toLowerCase().includes('general'));
       }
     } catch(e) {}
     if (departments.length === 0) {
@@ -2749,6 +2871,7 @@ function updateHeroEventCard() {
   const avatarEl = document.getElementById('hero-event-avatar');
   const locationEl = document.getElementById('hero-event-location');
   const dateEl = document.getElementById('hero-event-date');
+  const artInnerEl = document.getElementById('hero-event-card-inner');
   
   if (!titleEl || !databaseEvents || databaseEvents.length === 0) return;
   
@@ -2782,6 +2905,12 @@ function updateHeroEventCard() {
         month: 'long', day: 'numeric', year: 'numeric'
       });
       dateEl.textContent = dateFormatted;
+    }
+
+    if (artInnerEl) {
+      const imgUrl = getEventCoverImage(targetEvent);
+      artInnerEl.style.backgroundImage = `linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.75)), url('${imgUrl}')`;
+      artInnerEl.classList.add('has-image');
     }
   }
 }
@@ -3096,7 +3225,7 @@ function loadEventPlannerList() {
       <tr>
         <td>
           <div style="display:flex; align-items:center; gap:10px;">
-            <img src="${evt.imageUrl || 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=80&q=80'}" style="width:40px; height:30px; object-fit:cover; border-radius:4px; border:1px solid var(--border);" alt="cover">
+            <img src="${getEventCoverImage(evt)}" style="width:40px; height:30px; object-fit:cover; border-radius:4px; border:1px solid var(--border);" alt="cover">
             <strong>${evt.title}</strong>
           </div>
         </td>
@@ -3152,7 +3281,7 @@ window.openMemberAddEditModal = function(memberId = null) {
 
   let departments = [];
   try {
-    departments = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
+    departments = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]').filter(d => d.id !== 'general' && !(d.id || '').toLowerCase().includes('executive') && !(d.id || '').toLowerCase().includes('general') && !(d.name || '').toLowerCase().includes('executive') && !(d.name || '').toLowerCase().includes('general'));
   } catch(e) {}
   if (departments.length === 0) {
     departments = SEED_DEPARTMENTS;
@@ -3317,6 +3446,19 @@ window.openEventAddEditModal = function(eventId = null) {
       <div class="form-group" style="margin-bottom:16px;">
         <label for="e-form-image">Event Cover Image URL</label>
         <input type="url" id="e-form-image" class="form-control" placeholder="https://images.unsplash.com/photo... (leave empty for default)" value="${isEdit ? event.imageUrl || '' : ''}">
+        
+        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 0.8rem; color: var(--text-muted);">or</span>
+          <label class="btn btn-secondary" style="font-size: 0.75rem; padding: 6px 12px; margin-bottom: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Select Local Image File
+            <input type="file" id="e-form-file" accept="image/*" style="display: none;">
+          </label>
+        </div>
+
+        <div id="e-image-preview-container" style="margin-top: 12px; display: ${isEdit ? 'block' : 'none'};">
+          <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Image Preview:</span>
+          <img id="e-image-preview" src="${isEdit ? getEventCoverImage(event) : ''}" style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border);" alt="preview">
+        </div>
       </div>
 
       <div class="form-group" style="margin-bottom:16px;">
@@ -3334,6 +3476,46 @@ window.openEventAddEditModal = function(eventId = null) {
   modalOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 
+  const imgInput = document.getElementById('e-form-image');
+  const fileInput = document.getElementById('e-form-file');
+  const previewContainer = document.getElementById('e-image-preview-container');
+  const previewImg = document.getElementById('e-image-preview');
+
+  imgInput.addEventListener('input', () => {
+    const url = imgInput.value.trim();
+    const converted = convertGoogleDriveLink(url);
+    if (converted) {
+      previewImg.src = converted;
+      previewContainer.style.display = 'block';
+      if (converted !== url) {
+        imgInput.value = converted;
+      }
+    } else {
+      previewContainer.style.display = 'none';
+      previewImg.src = '';
+    }
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 1024 * 1024) {
+        showToast('File Too Large', 'Please select an image smaller than 1MB.', 'error');
+        fileInput.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Url = event.target.result;
+        imgInput.value = base64Url;
+        previewImg.src = base64Url;
+        previewContainer.style.display = 'block';
+        showToast('Image Loaded', 'Local image ready for upload.', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
   const form = document.getElementById('event-add-edit-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -3342,7 +3524,8 @@ window.openEventAddEditModal = function(eventId = null) {
     const date = document.getElementById('e-form-date').value;
     const location = document.getElementById('e-form-location').value.trim();
     const description = document.getElementById('e-form-desc').value.trim();
-    const imageUrl = document.getElementById('e-form-image').value.trim();
+    const rawImageUrl = document.getElementById('e-form-image').value.trim();
+    const imageUrl = convertGoogleDriveLink(rawImageUrl);
 
     if (!title || !date || !location || !description) {
       showToast('Validation Error', 'All fields are required.', 'error');

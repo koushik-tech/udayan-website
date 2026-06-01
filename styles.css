@@ -133,6 +133,50 @@ img {
   display: block;
 }
 
+/* Ambient Glassmorphic Glow Blobs */
+.glow-blob {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.08;
+  z-index: -1;
+  pointer-events: none;
+  animation: floatGlow 18s infinite alternate ease-in-out;
+}
+.glow-blob-1 {
+  background: var(--primary);
+  top: 5%;
+  left: -200px;
+}
+.glow-blob-2 {
+  background: var(--secondary);
+  top: 35%;
+  right: -250px;
+  animation-delay: -6s;
+}
+.glow-blob-3 {
+  background: var(--solar-500);
+  top: 75%;
+  left: 5%;
+  animation-delay: -12s;
+}
+[data-theme="dark"] .glow-blob {
+  opacity: 0.18;
+}
+@keyframes floatGlow {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(60px, 90px) scale(1.15);
+  }
+  100% {
+    transform: translate(-40px, -50px) scale(0.9);
+  }
+}
+
 /* Layout Wrappers */
 .container {
   width: 100%;
@@ -182,6 +226,29 @@ header.scrolled {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
+@media (min-width: 993px) {
+  header {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 48px);
+    max-width: var(--container-width);
+    height: 70px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-round);
+    padding: 0 32px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: var(--transition-bounce);
+  }
+
+  header.scrolled {
+    top: 10px;
+    height: 64px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-color: hsl(var(--primary-hsl), 0.25);
+  }
+}
+
 .nav-wrapper {
   width: 100%;
   display: flex;
@@ -192,14 +259,14 @@ header.scrolled {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   text-decoration: none;
   flex-shrink: 0;
 }
 
 .brand-text {
   font-family: 'Outfit', sans-serif;
-  font-size: 2.35rem;
+  font-size: 2.0rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -242,7 +309,7 @@ header.scrolled {
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 14px;
   list-style: none;
 }
 
@@ -250,14 +317,14 @@ nav {
   display: flex;
   justify-content: center;
   flex-grow: 1;
-  margin: 0 20px;
+  margin: 0 16px;
 }
 
 .nav-link {
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
   color: var(--text-main);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   position: relative;
   padding: 8px 0;
 }
@@ -1057,13 +1124,16 @@ nav {
   padding: 20px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  background-color: var(--background);
-  transition: var(--transition-smooth);
+  background-color: var(--navbar-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: var(--transition-bounce);
 }
 
 .val-box:hover {
-  transform: translateY(-4px);
-  border-color: var(--primary);
+  transform: translateY(-6px);
+  border-color: hsl(var(--primary-hsl), 0.35);
+  box-shadow: 0 12px 24px -10px hsl(var(--primary-hsl), 0.2);
 }
 
 .val-icon {
@@ -1151,6 +1221,148 @@ nav {
   font-size: 0.8rem;
 }
 
+/* --- Governing Body & Leadership Section --- */
+.leadership {
+  background-color: var(--background);
+}
+
+.leadership-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+}
+
+.leadership-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition-bounce);
+}
+
+.leadership-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: hsl(var(--primary-hsl), 0.2);
+}
+
+.leadership-card-media {
+  position: relative;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leadership-card-icon {
+  font-size: 3rem;
+  color: white;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.leadership-card-tag {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-round);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.leadership-card-content {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.leadership-card-content h3 {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+  color: var(--text-main);
+}
+
+.leadership-card-content p {
+  font-size: 0.925rem;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  color: var(--text-main);
+}
+
+.leadership-meta {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.825rem;
+  color: var(--text-muted);
+}
+
+.meta-row i {
+  color: var(--primary);
+  width: 14px;
+}
+
+.member-roster-box {
+  border-top: 1px dashed var(--border);
+  padding-top: 20px;
+  margin-top: auto;
+}
+
+.member-roster-box h4 {
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.roster-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.roster-list li {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 6px;
+}
+
+.roster-list li span.role {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* --- Departments Section --- */
+.departments {
+  background-color: var(--surface);
+}
+
 /* --- Departments Hub Section --- */
 .dept-hub-filters {
   display: flex;
@@ -1191,7 +1403,9 @@ nav {
 }
 
 .dept-card {
-  background-color: var(--surface);
+  background-color: var(--navbar-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--card-shadow);
@@ -1204,8 +1418,8 @@ nav {
 
 .dept-card:hover {
   transform: translateY(-6px);
-  box-shadow: var(--card-shadow-hover);
-  border-color: hsl(var(--primary-hsl), 0.2);
+  box-shadow: 0 20px 40px -15px hsl(var(--primary-hsl), 0.25);
+  border-color: hsl(var(--primary-hsl), 0.35);
 }
 
 .dept-card-media {
@@ -1315,7 +1529,7 @@ nav {
 
 /* --- Events Section --- */
 .events {
-  background-color: var(--surface);
+  background-color: var(--background);
 }
 
 .events-grid {
@@ -2317,12 +2531,12 @@ footer {
   }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1350px) {
   .nav-menu {
-    gap: 16px;
+    gap: 10px;
   }
   .brand-text {
-    font-size: 1.80rem;
+    font-size: 1.6rem;
   }
   #db-sync-status-badge {
     display: none !important;
@@ -2375,6 +2589,7 @@ footer {
     padding: 24px;
   }
   
+  .leadership-grid,
   .committees-grid {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -2885,5 +3100,33 @@ footer {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* --- HERO EVENT CARD COVER IMAGE OVERLAYS --- */
+.art-inner.has-image {
+  background-size: cover;
+  background-position: center;
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.art-inner.has-image .art-center {
+  color: white !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.art-inner.has-image .art-user h4 {
+  color: white !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.art-inner.has-image .art-user p {
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.art-inner.has-image .art-icon {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
