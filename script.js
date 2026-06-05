@@ -312,10 +312,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHeroStatistics();
   updateHeroEventCard();
   updateCommitteesList();
+  updateSiteBannerFromDatabase();
   
   // Initialize secure cloud connection and trigger landing sync
   initCloudDatabase();
   await syncCloudDataOnLanding();
+  updateSiteBannerFromDatabase();
   
   initDonationWidget();
   initFormsHandler();
@@ -464,7 +466,49 @@ function initDatabaseState() {
   // 5. Departments DB
   let storedDepts = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
   if (!storedDepts) {
-    localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(SEED_DEPARTMENTS));
+    const generalDefault = {
+      id: 'general',
+      name: 'General',
+      category: 'General',
+      icon: '📋',
+      executiveCommittee: [
+        { name: 'Subrata Dey', role: 'President' },
+        { name: 'Bimal Krishna Roy', role: 'Gen. Secretary' },
+        { name: 'Sulata Ghosh', role: 'Treasurer' }
+      ],
+      subCommittee: [
+        { name: 'Arundhati Sen', role: 'Cultural Convener' },
+        { name: 'Rohan Banerjee', role: 'Sports Coordinator' },
+        { name: 'Keya Das', role: 'Student Coordinator' }
+      ],
+      banner_url: ''
+    };
+    const deptsSeed = SEED_DEPARTMENTS.concat([generalDefault]);
+    localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(deptsSeed));
+  } else {
+    try {
+      const depts = JSON.parse(storedDepts);
+      if (!depts.some(d => d.id === 'general')) {
+        depts.push({
+          id: 'general',
+          name: 'General',
+          category: 'General',
+          icon: '📋',
+          executiveCommittee: [
+            { name: 'Subrata Dey', role: 'President' },
+            { name: 'Bimal Krishna Roy', role: 'Gen. Secretary' },
+            { name: 'Sulata Ghosh', role: 'Treasurer' }
+          ],
+          subCommittee: [
+            { name: 'Arundhati Sen', role: 'Cultural Convener' },
+            { name: 'Rohan Banerjee', role: 'Sports Coordinator' },
+            { name: 'Keya Das', role: 'Student Coordinator' }
+          ],
+          banner_url: ''
+        });
+        localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
+      }
+    } catch(e) {}
   }
 }
 
@@ -1208,6 +1252,22 @@ function initConsoleSystem() {
       initEventPlannerTriggers();
     } else {
       eventPlannerPanel.innerHTML = getRestrictedAccessOverlay('Event Planner', 'Only Admin accounts can create or schedule new events.');
+    }
+  }
+
+  // 7. Site Settings Panel
+  const settingsPanel = document.getElementById('panel-site-settings');
+  const settingsTab = document.getElementById('tab-site-settings');
+  if (role === 'Admin') {
+    if (settingsTab) settingsTab.style.display = 'inline-flex';
+    if (settingsPanel) {
+      settingsPanel.innerHTML = getSiteSettingsDashboardHtml();
+      initSiteSettingsTriggers();
+    }
+  } else {
+    if (settingsTab) settingsTab.style.display = 'none';
+    if (settingsPanel) {
+      settingsPanel.innerHTML = getRestrictedAccessOverlay('Site Settings', 'Only Admin accounts can modify site-wide configuration settings.');
     }
   }
 }
@@ -3628,6 +3688,158 @@ window.openEventAddEditModal = function(eventId = null) {
     }
   });
 };
+
+// --- SITE SETTINGS & HOMEPAGE BANNER CONFIGURATION ---
+function updateSiteBannerFromDatabase() {
+  const raw = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
+  let bannerUrl = 'udayan_banner.png'; // default fallback
+  if (raw) {
+    try {
+      const depts = JSON.parse(raw);
+      const general = depts.find(d => d.id === 'general');
+      if (general && general.banner_url) {
+        bannerUrl = convertGoogleDriveLink(general.banner_url);
+      } else if (general && general.about && (general.about.startsWith('http://') || general.about.startsWith('https://'))) {
+        bannerUrl = convertGoogleDriveLink(general.about);
+      }
+    } catch (e) {
+      console.warn('Error reading banner url from departments:', e);
+    }
+  }
+  const bannerImgEl = document.querySelector('.hero-banner-image');
+  if (bannerImgEl) {
+    bannerImgEl.style.backgroundImage = `url('${bannerUrl}')`;
+  }
+}
+
+function getSiteSettingsDashboardHtml() {
+  let currentBanner = '';
+  try {
+    const depts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
+    const general = depts.find(d => d.id === 'general');
+    if (general) {
+      currentBanner = general.banner_url || general.about || '';
+    }
+  } catch (e) {}
+
+  return `
+    <div class="payment-form-card" style="max-width: 800px; margin: 0 auto; text-align: left;">
+      <h3><i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Homepage Banner Configuration</h3>
+      <p style="margin-bottom: 24px; font-size: 0.9rem; color: var(--text-muted);">
+        Customize the primary banner image displayed on the homepage. You can provide a standard public URL or a Google Drive file sharing link.
+      </p>
+
+      <form id="site-settings-form" novalidate>
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label for="settings-banner-url">Banner Image URL (Google Drive Supported)</label>
+          <input type="url" id="settings-banner-url" class="form-control" 
+                 placeholder="e.g. https://drive.google.com/file/d/... or https://images.unsplash.com/..." 
+                 value="${currentBanner}">
+          <small style="color: var(--text-muted); margin-top: 4px; display: block;">
+            Google Drive share links will automatically be transformed into direct embed links.
+          </small>
+        </div>
+
+        <div id="settings-banner-preview-container" style="margin-bottom: 24px; display: ${currentBanner ? 'block' : 'none'};">
+          <span style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">Live Banner Preview:</span>
+          <div style="width: 100%; height: 200px; border-radius: var(--radius-md); border: 1px solid var(--border); overflow: hidden; background: var(--background);">
+            <img id="settings-banner-preview" src="${currentBanner ? convertGoogleDriveLink(currentBanner) : ''}" 
+                 style="width: 100%; height: 100%; object-fit: cover;" alt="Banner Preview">
+          </div>
+        </div>
+
+        <div style="background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-database" style="color: var(--secondary);"></i> Supabase Schema Setup
+          </h4>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+            To persist this setting under its dedicated column, execute the following SQL in your Supabase SQL Editor:
+          </p>
+          <code style="display: block; background: var(--surface); padding: 10px 14px; border: 1px solid var(--border); border-radius: 4px; font-family: monospace; font-size: 0.8rem; color: var(--primary);">
+            ALTER TABLE departments ADD COLUMN banner_url TEXT;
+          </code>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+          <i class="fa-solid fa-floppy-disk"></i> Save Banner URL
+        </button>
+      </form>
+    </div>
+  `;
+}
+
+function initSiteSettingsTriggers() {
+  const form = document.getElementById('site-settings-form');
+  const input = document.getElementById('settings-banner-url');
+  const previewContainer = document.getElementById('settings-banner-preview-container');
+  const previewImg = document.getElementById('settings-banner-preview');
+
+  if (!form || !input || !previewContainer || !previewImg) return;
+
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    if (val) {
+      const converted = convertGoogleDriveLink(val);
+      previewImg.src = converted;
+      previewContainer.style.display = 'block';
+    } else {
+      previewContainer.style.display = 'none';
+      previewImg.src = '';
+    }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = input.value.trim();
+    await saveBannerUrl(url);
+  });
+}
+
+async function saveBannerUrl(newUrl) {
+  showLoader('Saving banner configuration...');
+  try {
+    let depts = [];
+    try {
+      depts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
+    } catch(e) {}
+
+    let generalIndex = depts.findIndex(d => d.id === 'general');
+    if (generalIndex === -1) {
+      depts.push({
+        id: 'general',
+        name: 'General',
+        category: 'General',
+        icon: '📋',
+        banner_url: newUrl
+      });
+    } else {
+      depts[generalIndex].banner_url = newUrl;
+    }
+    localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
+    updateSiteBannerFromDatabase();
+
+    if (activeCloudProvider !== 'none') {
+      try {
+        await updateDepartmentRecord('general', { banner_url: newUrl });
+        showToast('Settings Saved', 'Homepage banner URL updated in database successfully.', 'success');
+      } catch (dbErr) {
+        console.warn('Failed to update banner_url column directly. Retrying using about column fallback...', dbErr);
+        try {
+          await updateDepartmentRecord('general', { about: newUrl });
+          showToast('Settings Saved (Fallback)', 'Saved to department metadata. Please run ALTER TABLE to add banner_url column.', 'warning');
+        } catch (fallbackErr) {
+          throw new Error('Database update failed. Please ensure database connection is active or run: ALTER TABLE departments ADD COLUMN banner_url TEXT;');
+        }
+      }
+    } else {
+      showToast('Settings Saved Local', 'Settings updated locally (Offline mode).', 'success');
+    }
+    hideLoader();
+  } catch (err) {
+    hideLoader();
+    showToast('Failed to Save', err.message, 'error');
+  }
+}
 
 
 

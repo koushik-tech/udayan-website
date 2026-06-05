@@ -7,7 +7,7 @@
   <meta name="description" content="Welcome to Udayan, a premier social organisation driving cultural enrichment, physical wellness, social service, and community learning since 1950.">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=1.3">
+  <link rel="stylesheet" href="styles.css?v=1.4">
   
   <!-- FontAwesome Icons for premium modern styling -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -82,6 +82,9 @@
   <!-- 2. HERO / HOME SECTION -->
   <!-- ============================================== -->
   <section class="hero" id="hero">
+    <div class="container hero-banner-container">
+      <div class="hero-banner-image" title="Udayan Community Center"></div>
+    </div>
     <div class="container hero-grid">
       <div class="hero-content">
         <h1><span>Rooted in Service.<br>Growing Through Culture.</span></h1>
@@ -158,6 +161,9 @@
         </button>
         <button class="console-tab-btn" data-panel="panel-wings-ledger" id="tab-wings-ledger">
           <i class="fa-solid fa-diagram-project"></i> Wings Ledger
+        </button>
+        <button class="console-tab-btn" data-panel="panel-site-settings" id="tab-site-settings" style="display: none;">
+          <i class="fa-solid fa-gears"></i> Site Settings
         </button>
       </div>
 
@@ -426,6 +432,11 @@
 
       <!-- Tab Panel 6: Event Planner (Admin only) -->
       <div class="console-view-panel" id="panel-create-events">
+        <!-- Renders Dynamically in script.js -->
+      </div>
+
+      <!-- Tab Panel 7: Site Settings (Admin only) -->
+      <div class="console-view-panel" id="panel-site-settings">
         <!-- Renders Dynamically in script.js -->
       </div>
 
