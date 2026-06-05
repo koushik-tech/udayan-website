@@ -244,6 +244,7 @@ const SEED_EVENTS = [
     title: 'Yoga & Pranayam Morning Session',
     date: '2026-05-28',
     location: 'Park Complex, Udayan',
+    time: '6:00 AM - 7:30 AM',
     description: 'Early morning wellness camp focusing on basic breathing patterns, Pranayam, and beginner yogasanas for senior citizens.',
     imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80',
     participants: ['p-2', 'p-3']
@@ -253,6 +254,7 @@ const SEED_EVENTS = [
     title: 'Free Health Screening Clinic',
     date: '2026-06-05',
     location: 'Dispensary Main Hall',
+    time: '9:00 AM - 12:00 PM',
     description: 'Our monthly general medical checkup day in the dispensary. Providing free consultations, blood sugar tests, and basic medications.',
     imageUrl: 'https://lh3.googleusercontent.com/d/1KDJsoQsLgk9BCXzORx3xjd7GLW9XD3ws',
     participants: ['p-2', 'p-3', 'p-6']
@@ -261,7 +263,8 @@ const SEED_EVENTS = [
     id: 'e-3',
     title: 'Annual Rabindra Jayanti Celebrations',
     date: '2026-06-15',
-    location: 'Community Auditorium, Lake Road',
+    location: 'Community Auditorium, Belgharia',
+    time: '5:30 PM onwards',
     description: 'Rabindrasangeet recitations, classical dance pieces, and art exhibition showcasing sketches drawn by our art school students.',
     imageUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80',
     participants: ['p-1', 'p-4', 'p-5']
@@ -577,6 +580,8 @@ function syncAndRenderEvents() {
       day: 'numeric', month: 'short', year: 'numeric'
     });
     
+    const timeRow = evt.time ? `<div class="event-details-row"><i class="fa-solid fa-clock"></i> <span><strong>Time:</strong> ${evt.time}</span></div>` : '';
+
     eventsGrid.innerHTML += `
       <div class="event-card ${status === 'past' ? 'past' : ''}">
         <div class="event-card-media">
@@ -591,7 +596,8 @@ function syncAndRenderEvents() {
           <p>${evt.description}</p>
           <div class="event-details" style="margin-top: auto;">
             <div class="event-details-row"><i class="fa-solid fa-calendar-day"></i> <span><strong>Date:</strong> ${dateFormatted}</span></div>
-            <div class="event-details-row"><i class="fa-solid fa-map-pin"></i> <span><strong>Venue:</strong> ${evt.location || 'Lake Road Hall'}</span></div>
+            ${timeRow}
+            <div class="event-details-row"><i class="fa-solid fa-map-pin"></i> <span><strong>Venue:</strong> ${evt.location || 'Belgharia Hall'}</span></div>
           </div>
           <div style="margin-top: 16px;">
             ${status !== 'past' ? `
@@ -1579,7 +1585,7 @@ function renderSelectedEventRegistry(readOnly) {
 
   title.textContent = activeEvent.title;
   const dateStr = new Date(activeEvent.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-  meta.innerHTML = `<i class="fa-regular fa-calendar"></i> ${dateStr} | <i class="fa-solid fa-location-dot"></i> ${activeEvent.location || 'Lake Road Hall'}`;
+  meta.innerHTML = `<i class="fa-regular fa-calendar"></i> ${dateStr} | <i class="fa-solid fa-location-dot"></i> ${activeEvent.location || 'Belgharia Hall'}`;
 
   roster.innerHTML = '';
   const list = activeEvent.participants || [];
@@ -2494,9 +2500,13 @@ const CloudApiService = {
 
   addPerson: async (newPerson) => {
     if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const payload = {
+        ...newPerson,
+        createdAt: new Date().toISOString()
+      };
       const { error } = await supabaseClientInstance
         .from('persons')
-        .insert([newPerson]);
+        .insert([payload]);
       if (error) throw error;
     } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
       await firebaseDbInstance.collection('persons').doc(newPerson.id).set(newPerson);
@@ -2576,23 +2586,27 @@ const CloudApiService = {
           .select('*');
         if (error) throw error;
         
-        // Unpack imageUrl and location from description
+        // Unpack imageUrl, location, and time from description
         return data.map(evt => {
           const desc = evt.description || '';
           const imgMatch = desc.match(/\[imageUrl:(.*?)\]/);
           const locMatch = desc.match(/\[location:(.*?)\]/);
+          const timeMatch = desc.match(/\[time:(.*?)\]/);
           
           const imageUrl = imgMatch ? imgMatch[1] : '';
           const location = locMatch ? locMatch[1] : '';
+          const time = timeMatch ? timeMatch[1] : '';
           const cleanDescription = desc
             .replace(/\[imageUrl:.*?\]/g, '')
             .replace(/\[location:.*?\]/g, '')
+            .replace(/\[time:.*?\]/g, '')
             .trim();
             
           return {
             ...evt,
             imageUrl: imageUrl || '',
             location: location || '',
+            time: time || '',
             description: cleanDescription
           };
         });
@@ -2623,8 +2637,9 @@ const CloudApiService = {
       const rawDesc = updatedData.description !== undefined ? updatedData.description : (fullEvent.description || '');
       const rawImg = updatedData.imageUrl !== undefined ? updatedData.imageUrl : (fullEvent.imageUrl || '');
       const rawLoc = updatedData.location !== undefined ? updatedData.location : (fullEvent.location || '');
+      const rawTime = updatedData.time !== undefined ? updatedData.time : (fullEvent.time || '');
       
-      const packedDesc = `${rawDesc} [imageUrl:${rawImg}][location:${rawLoc}]`;
+      const packedDesc = `${rawDesc} [imageUrl:${rawImg}][location:${rawLoc}][time:${rawTime}]`;
       
       const cleanData = {};
       if (newTitle !== undefined) cleanData.title = newTitle;
@@ -2649,7 +2664,8 @@ const CloudApiService = {
         title: newEvent.title,
         date: newEvent.date,
         participants: newEvent.participants,
-        description: `${newEvent.description || ''} [imageUrl:${newEvent.imageUrl || ''}][location:${newEvent.location || ''}]`
+        description: `${newEvent.description || ''} [imageUrl:${newEvent.imageUrl || ''}][location:${newEvent.location || ''}][time:${newEvent.time || ''}]`,
+        createdAt: new Date().toISOString()
       };
       const { error } = await supabaseClientInstance
         .from('events')
@@ -2733,16 +2749,30 @@ async function syncCloudDataOnLanding() {
     // 3. Sync Persons Directory
     const cloudPersons = await CloudApiService.getPersons();
     if (cloudPersons && cloudPersons.length > 0) {
-      localStorage.setItem(STORAGE_KEYS.PERSONS, JSON.stringify(cloudPersons));
-      databasePersons = cloudPersons;
+      const localPersons = JSON.parse(localStorage.getItem(STORAGE_KEYS.PERSONS) || '[]');
+      const mergedPersons = [...cloudPersons];
+      localPersons.forEach(localPers => {
+        if (!mergedPersons.some(cloudPers => cloudPers.id === localPers.id)) {
+          mergedPersons.push(localPers);
+        }
+      });
+      localStorage.setItem(STORAGE_KEYS.PERSONS, JSON.stringify(mergedPersons));
+      databasePersons = mergedPersons;
       console.log('[Udayan Sync] Persons database verified.');
     }
 
     // 4. Sync Events Schedules
     const cloudEvents = await CloudApiService.getEvents();
     if (cloudEvents && cloudEvents.length > 0) {
-      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(cloudEvents));
-      databaseEvents = cloudEvents;
+      const localEvents = JSON.parse(localStorage.getItem(STORAGE_KEYS.EVENTS) || '[]');
+      const mergedEvents = [...cloudEvents];
+      localEvents.forEach(localEvt => {
+        if (!mergedEvents.some(cloudEvt => cloudEvt.id === localEvt.id)) {
+          mergedEvents.push(localEvt);
+        }
+      });
+      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(mergedEvents));
+      databaseEvents = mergedEvents;
       console.log('[Udayan Sync] Community event planners synchronized.');
     }
 
@@ -2872,8 +2902,10 @@ function updateHeroEventCard() {
   const locationEl = document.getElementById('hero-event-location');
   const dateEl = document.getElementById('hero-event-date');
   const artInnerEl = document.getElementById('hero-event-card-inner');
+  const tagEl = document.getElementById('hero-event-tag');
+  const iconEl = document.getElementById('hero-event-icon');
   
-  if (!titleEl || !databaseEvents || databaseEvents.length === 0) return;
+  if (!titleEl || !databaseEvents) return;
   
   const today = new Date().toISOString().split('T')[0];
   
@@ -2882,15 +2914,9 @@ function updateHeroEventCard() {
     .filter(evt => evt.date >= today)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
     
-  let targetEvent = null;
   if (upcomingEvents.length > 0) {
-    targetEvent = upcomingEvents[0]; // Nearest upcoming
-  } else {
-    // If no upcoming, fall back to the most recent past event for rendering
-    targetEvent = [...databaseEvents].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-  }
-  
-  if (targetEvent) {
+    const targetEvent = upcomingEvents[0]; // Nearest upcoming
+    
     titleEl.innerHTML = targetEvent.title.replace(/\s&\s/g, ' &<br>').replace(/\sClinic/g, '<br>Clinic');
     
     const firstLetter = targetEvent.title ? targetEvent.title.substring(0, 1).toUpperCase() : 'E';
@@ -2904,12 +2930,29 @@ function updateHeroEventCard() {
       const dateFormatted = new Date(targetEvent.date).toLocaleDateString('en-US', {
         month: 'long', day: 'numeric', year: 'numeric'
       });
-      dateEl.textContent = dateFormatted;
+      dateEl.textContent = targetEvent.time ? `${dateFormatted} | ${targetEvent.time}` : dateFormatted;
     }
+
+    if (tagEl) tagEl.textContent = 'Next Event';
+    if (iconEl) iconEl.textContent = '📅';
 
     if (artInnerEl) {
       const imgUrl = getEventCoverImage(targetEvent);
       artInnerEl.style.backgroundImage = `linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.75)), url('${imgUrl}')`;
+      artInnerEl.classList.add('has-image');
+    }
+  } else {
+    // Generic "Stay Tuned" fallback card if no upcoming events
+    titleEl.innerHTML = 'Stay Tuned for<br>Our Next Event!';
+    if (avatarEl) avatarEl.textContent = 'U';
+    if (locationEl) locationEl.textContent = 'Udayan, Belgharia';
+    if (dateEl) dateEl.textContent = 'Announcements Soon';
+    if (tagEl) tagEl.textContent = 'Stay Tuned';
+    if (iconEl) iconEl.textContent = '📢';
+    
+    if (artInnerEl) {
+      const genericImg = 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=600&q=80';
+      artInnerEl.style.backgroundImage = `linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.75)), url('${genericImg}')`;
       artInnerEl.classList.add('has-image');
     }
   }
@@ -3229,8 +3272,8 @@ function loadEventPlannerList() {
             <strong>${evt.title}</strong>
           </div>
         </td>
-        <td>${dateFormatted}</td>
-        <td><i class="fa-solid fa-location-dot" style="color:var(--primary); margin-right:4px;"></i> ${evt.location || 'Lake Road'}</td>
+        <td>${dateFormatted}${evt.time ? `<br><small style="color:var(--text-muted);"><i class="fa-regular fa-clock"></i> ${evt.time}</small>` : ''}</td>
+        <td><i class="fa-solid fa-location-dot" style="color:var(--primary); margin-right:4px;"></i> ${evt.location || 'Belgharia'}</td>
         <td><div style="max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${evt.description}">${evt.description}</div></td>
         <td><span style="font-weight:700; color:var(--primary);">${rosterSize}</span> members</td>
         <td>
@@ -3437,9 +3480,13 @@ window.openEventAddEditModal = function(eventId = null) {
           <label for="e-form-date">Event Date</label>
           <input type="date" id="e-form-date" class="form-control" required value="${isEdit ? event.date : ''}">
         </div>
+        <div class="form-group" style="flex:1; margin-bottom:0;">
+          <label for="e-form-time">Event Time (Optional)</label>
+          <input type="text" id="e-form-time" class="form-control" placeholder="e.g. 10:00 AM" value="${isEdit ? event.time || '' : ''}">
+        </div>
         <div class="form-group" style="flex:1.2; margin-bottom:0;">
           <label for="e-form-location">Venue / Location</label>
-          <input type="text" id="e-form-location" class="form-control" placeholder="Main Hall, Lake Road" required value="${isEdit ? event.location || '' : ''}">
+          <input type="text" id="e-form-location" class="form-control" placeholder="Main Hall, Belgharia" required value="${isEdit ? event.location || '' : ''}">
         </div>
       </div>
 
@@ -3523,6 +3570,7 @@ window.openEventAddEditModal = function(eventId = null) {
     const title = document.getElementById('e-form-title').value.trim();
     const date = document.getElementById('e-form-date').value;
     const location = document.getElementById('e-form-location').value.trim();
+    const time = document.getElementById('e-form-time').value.trim();
     const description = document.getElementById('e-form-desc').value.trim();
     const rawImageUrl = document.getElementById('e-form-image').value.trim();
     const imageUrl = convertGoogleDriveLink(rawImageUrl);
@@ -3542,6 +3590,7 @@ window.openEventAddEditModal = function(eventId = null) {
           title,
           date,
           location,
+          time,
           description,
           imageUrl: imageUrl || defaultImg
         });
@@ -3553,6 +3602,7 @@ window.openEventAddEditModal = function(eventId = null) {
           title,
           date,
           location,
+          time,
           description,
           imageUrl: imageUrl || defaultImg,
           participants: []

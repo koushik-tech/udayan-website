@@ -36,8 +36,8 @@
   --surface: var(--neutral-100);
   --surface-hover: hsl(210, 30%, 99%);
   --border: var(--neutral-300);
-  --text-main: var(--neutral-800);
-  --text-muted: var(--neutral-700);
+  --text-main: hsl(250, 45%, 24%); /* Rich Dark Indigo-Blue (Not Black) */
+  --text-muted: hsl(245, 20%, 44%); /* Premium Slate-Indigo (Not Black) */
   --text-inverse: #ffffff;
   --navbar-bg: rgba(255, 255, 255, 0.8);
   --card-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.03);
