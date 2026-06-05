@@ -3113,20 +3113,38 @@ footer {
 
 .art-inner.has-image .art-center {
   color: white !important;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-shadow: none;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.art-inner.has-image .art-footer {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  width: 100%;
 }
 
 .art-inner.has-image .art-user h4 {
   color: white !important;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: none;
 }
 
 .art-inner.has-image .art-user p {
-  color: rgba(255, 255, 255, 0.8) !important;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: none;
 }
 
 .art-inner.has-image .art-icon {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: none;
 }
 

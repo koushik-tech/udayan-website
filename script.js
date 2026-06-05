@@ -2904,6 +2904,7 @@ function updateHeroEventCard() {
   const artInnerEl = document.getElementById('hero-event-card-inner');
   const tagEl = document.getElementById('hero-event-tag');
   const iconEl = document.getElementById('hero-event-icon');
+  const outerCardEl = document.getElementById('hero-event-card-outer');
   
   if (!titleEl || !databaseEvents) return;
   
@@ -2936,9 +2937,12 @@ function updateHeroEventCard() {
     if (tagEl) tagEl.textContent = 'Next Event';
     if (iconEl) iconEl.textContent = '📅';
 
+    if (outerCardEl) {
+      outerCardEl.style.backgroundImage = '';
+    }
     if (artInnerEl) {
       const imgUrl = getEventCoverImage(targetEvent);
-      artInnerEl.style.backgroundImage = `linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.75)), url('${imgUrl}')`;
+      artInnerEl.style.backgroundImage = `url('${imgUrl}')`;
       artInnerEl.classList.add('has-image');
     }
   } else {
@@ -2950,9 +2954,12 @@ function updateHeroEventCard() {
     if (tagEl) tagEl.textContent = 'Stay Tuned';
     if (iconEl) iconEl.textContent = '📢';
     
+    if (outerCardEl) {
+      outerCardEl.style.backgroundImage = '';
+    }
     if (artInnerEl) {
       const genericImg = 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=600&q=80';
-      artInnerEl.style.backgroundImage = `linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.75)), url('${genericImg}')`;
+      artInnerEl.style.backgroundImage = `url('${genericImg}')`;
       artInnerEl.classList.add('has-image');
     }
   }
