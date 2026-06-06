@@ -258,40 +258,6 @@ const SEED_EVENTS = [
     description: 'Our monthly general medical checkup day in the dispensary. Providing free consultations, blood sugar tests, and basic medications.',
     imageUrl: 'https://lh3.googleusercontent.com/d/1KDJsoQsLgk9BCXzORx3xjd7GLW9XD3ws',
     participants: ['p-2', 'p-3', 'p-6']
-  },
-  {
-    id: 'e-3',
-    title: 'Annual Rabindra Jayanti Celebrations',
-    date: '2026-06-15',
-    location: 'Community Auditorium, Belgharia',
-    time: '5:30 PM onwards',
-    description: 'Rabindrasangeet recitations, classical dance pieces, and art exhibition showcasing sketches drawn by our art school students.',
-    imageUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80',
-    participants: ['p-1', 'p-4', 'p-5']
-  }
-];
-
-const SEED_INQUIRIES = [
-  {
-    id: 'inq-1',
-    name: 'Rahul Sen',
-    email: 'rahul.sen@yahoo.com',
-    type: 'Inquiry',
-    subject: 'Drawing batch timings',
-    details: 'Could you please confirm if there are any drawing classes available for children on weekdays after school hours?',
-    submittedAt: '2026-05-29T11:20:00Z',
-    status: 'pending'
-  },
-  {
-    id: 'inq-2',
-    name: 'Priya Roy',
-    phone: '9830598305',
-    email: 'priyaroy@outlook.com',
-    type: 'Join Application',
-    wingName: 'Dispensary',
-    details: 'Interested to enroll as volunteer nurse. I hold a completed paramedical certificate and am free on weekends.',
-    submittedAt: '2026-05-29T14:45:00Z',
-    status: 'pending'
   }
 ];
 
@@ -313,11 +279,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHeroEventCard();
   updateCommitteesList();
   updateSiteBannerFromDatabase();
+  updateContactSection();
   
   // Initialize secure cloud connection and trigger landing sync
   initCloudDatabase();
   await syncCloudDataOnLanding();
   updateSiteBannerFromDatabase();
+  await updateContactSection();
   
   initDonationWidget();
   initFormsHandler();
@@ -455,12 +423,6 @@ function initDatabaseState() {
   });
   if (updatedEvents) {
     localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(databaseEvents));
-  }
-
-  // 4. Inquiries Log Queue
-  let storedInq = localStorage.getItem('udayan_submitted_enquiries');
-  if (!storedInq) {
-    localStorage.setItem('udayan_submitted_enquiries', JSON.stringify(SEED_INQUIRIES));
   }
 
   // 5. Departments DB
@@ -643,17 +605,6 @@ function syncAndRenderEvents() {
             ${timeRow}
             <div class="event-details-row"><i class="fa-solid fa-map-pin"></i> <span><strong>Venue:</strong> ${evt.location || 'Belgharia Hall'}</span></div>
           </div>
-          <div style="margin-top: 16px;">
-            ${status !== 'past' ? `
-              <button class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 0.85rem;" onclick="registerForEvent('${evt.title}')">
-                <i class="fa-solid fa-signature"></i> Register to Attend
-              </button>
-            ` : `
-              <button class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.85rem; cursor: not-allowed;" disabled>
-                <i class="fa-solid fa-ban"></i> Event Closed
-              </button>
-            `}
-          </div>
         </div>
       </div>
     `;
@@ -755,121 +706,58 @@ function initLightboxTriggers() {
 
 // --- INTERACTIVE FORMS LOGIC ---
 function initFormsHandler() {
-  const tabs = document.querySelectorAll('#contact-form-tabs .form-tab-btn');
-  const forms = document.querySelectorAll('.interactive-form');
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-
-      const targetFormId = tab.getAttribute('data-form');
-      forms.forEach(form => {
-        if (form.getAttribute('id') === targetFormId) {
-          form.classList.add('active');
-        } else {
-          form.classList.remove('active');
-        }
-      });
-    });
-  });
-
   // Submit Contact Inquiry
   const msgForm = document.getElementById('contact-msg-form');
-  msgForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+  if (msgForm) {
+    msgForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-    const name = document.getElementById('msg-name').value.trim();
-    const email = document.getElementById('msg-email').value.trim();
-    const subject = document.getElementById('msg-subject').value.trim();
-    const message = document.getElementById('msg-text').value.trim();
+      const name = document.getElementById('msg-name').value.trim();
+      const email = document.getElementById('msg-email').value.trim();
+      const subject = document.getElementById('msg-subject').value.trim();
+      const message = document.getElementById('msg-text').value.trim();
 
-    if (!name || !email || !subject || !message) {
-      showToast('Validation Error', 'All form fields are required.', 'error');
-      return;
-    }
+      if (!name || !email || !subject || !message) {
+        showToast('Validation Error', 'All form fields are required.', 'error');
+        return;
+      }
 
-    if (!validateEmail(email)) {
-      showToast('Validation Error', 'Please enter a valid email.', 'error');
-      return;
-    }
+      if (!validateEmail(email)) {
+        showToast('Validation Error', 'Please enter a valid email.', 'error');
+        return;
+      }
 
-    // Write to shared admin ledger queue!
-    const newInquiry = {
-      id: `inq-${Date.now()}`,
-      name,
-      email,
-      type: 'Inquiry',
-      subject,
-      details: message,
-      submittedAt: new Date().toISOString(),
-      status: 'pending'
-    };
+      // Write to shared messages table
+      const newInquiry = {
+        id: `msg-${Date.now()}`,
+        name,
+        email,
+        subject,
+        message,
+        submittedAt: new Date().toISOString(),
+        status: 'pending'
+      };
 
-    saveSubmittedInquiry(newInquiry);
-    showToast('Inquiry Received', `Thank you, ${name}! Your inquiry has been sent to our desk.`, 'success');
-    msgForm.reset();
-  });
-
-  // Submit Join Application
-  const joinForm = document.getElementById('contact-join-form');
-  joinForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const name = document.getElementById('join-name').value.trim();
-    const phone = document.getElementById('join-phone').value.trim();
-    const email = document.getElementById('join-email').value.trim();
-    const wingId = document.getElementById('join-wing').value;
-    const remarks = document.getElementById('join-remarks').value.trim();
-
-    if (!name || !phone || !email || !wingId || !remarks) {
-      showToast('Validation Error', 'All fields must be completed.', 'error');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      showToast('Validation Error', 'Enter a valid email address.', 'error');
-      return;
-    }
-
-    if (phone.length !== 10 || isNaN(phone)) {
-      showToast('Validation Error', 'Phone must be exactly 10 digits.', 'error');
-      return;
-    }
-
-    const wingSelect = document.getElementById('join-wing');
-    const wingName = wingSelect.options[wingSelect.selectedIndex].text;
-
-    // Write to shared queue
-    const newJoin = {
-      id: `inq-${Date.now()}`,
-      name,
-      phone,
-      email,
-      type: 'Join Application',
-      wingName,
-      details: remarks,
-      submittedAt: new Date().toISOString(),
-      status: 'pending'
-    };
-
-    saveSubmittedInquiry(newJoin);
-    showToast('Application Logged', `Welcome, ${name}! Your application has been logged.`, 'success');
-    joinForm.reset();
-  });
+      await saveSubmittedMessage(newInquiry);
+      showToast('Message Sent', `Thank you, ${name}! Your message has been sent to our desk.`, 'success');
+      msgForm.reset();
+    });
+  }
 }
 
-function saveSubmittedInquiry(inq) {
-  let list = [];
-  try {
-    list = JSON.parse(localStorage.getItem('udayan_submitted_enquiries') || '[]');
-  } catch(e) {}
-  list.unshift(inq);
-  localStorage.setItem('udayan_submitted_enquiries', JSON.stringify(list));
-  
+async function saveSubmittedMessage(msg) {
+  if (activeCloudProvider !== 'none') {
+    try {
+      await CloudApiService.addMessage(msg);
+      console.log('[Udayan Write] Cloud sync successful for Message: ' + msg.id);
+    } catch (err) {
+      console.error('[Udayan Write] Cloud message sync failed:', err);
+    }
+  }
+
   // Re-render inquiries if administrator is logged in
   if (activeUserSession) {
-    loadEnquiriesQueue();
+    await loadEnquiriesQueue();
   }
 }
 
@@ -878,19 +766,20 @@ function validateEmail(email) {
 }
 
 window.preselectWing = function(wingId) {
-  document.getElementById('tab-join').click();
-  const select = document.getElementById('join-wing');
-  if (select) select.value = wingId;
-};
-
-window.registerForEvent = function(eventTitle) {
-  window.location.hash = '#contact';
-  preselectWing('general-volunteer');
-  const joinRemarks = document.getElementById('join-remarks');
-  if (joinRemarks) {
-    joinRemarks.value = `Hi, I would like to register to attend the event: "${eventTitle}". Please confirm my seat.`;
+  try {
+    const rawDepts = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
+    if (!rawDepts) return;
+    const depts = JSON.parse(rawDepts);
+    const dept = depts.find(d => d.id === wingId);
+    if (dept) {
+      const subject = document.getElementById('msg-subject');
+      const details = document.getElementById('msg-text');
+      if (subject) subject.value = `Inquiry regarding joining the ${dept.name} department`;
+      if (details) details.value = `Hi, I am interested in joining the ${dept.name} department. Please provide details on enrollment and timings.`;
+    }
+  } catch (e) {
+    console.error('Error preselecting wing:', e);
   }
-  showToast('Form Ready', 'Complete details to register for event.', 'success');
 };
 
 // --- INTERACTIVE DONATION PORTAL ---
@@ -1693,93 +1582,135 @@ window.deRegisterMember = function(memberId) {
 };
 
 // --- ENROLMENT INBOX APPLICATIONS LOG ---
-function loadEnquiriesQueue() {
+async function loadEnquiriesQueue() {
   const container = document.getElementById('inbox-cards-container');
   const countInfo = document.getElementById('inquiries-count-info');
   if (!container) return;
 
-  let queue = [];
-  try {
-    queue = JSON.parse(localStorage.getItem('udayan_submitted_enquiries') || '[]');
-  } catch(e) {}
-
-  const pendingCount = queue.filter(q => q.status === 'pending').length;
-  countInfo.textContent = `${pendingCount} pending applications in queue`;
-
-  container.innerHTML = '';
-  
-  if (queue.length === 0) {
-    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted); border:1px dashed var(--border); border-radius: var(--radius-lg);"><i class="fa-solid fa-inbox" style="font-size:2rem; margin-bottom:12px;"></i><br>Inbox is completely clean.</div>`;
+  if (activeCloudProvider === 'none' || (!supabaseClientInstance && !firebaseDbInstance)) {
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted); border:1px dashed var(--border); border-radius: var(--radius-lg);">Database connection required to load messages.</div>`;
+    countInfo.textContent = `0 pending messages in queue`;
     return;
   }
 
-  queue.forEach(item => {
-    const isJoin = item.type === 'Join Application';
-    const tagClass = isJoin ? 'badge-member' : 'badge-teacher';
-    const dateFormatted = new Date(item.submittedAt).toLocaleDateString('en-IN', {
-      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-    });
+  try {
+    const queue = await CloudApiService.getMessages();
+    if (!queue) {
+      container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted); border:1px dashed var(--border); border-radius: var(--radius-lg);">Failed to retrieve messages from database.</div>`;
+      countInfo.textContent = `0 pending messages in queue`;
+      return;
+    }
 
-    const bodyDetails = isJoin
-      ? `<p><span class="lbl">Apply Wing:</span><strong>${item.wingName}</strong></p>
-         <p><span class="lbl">Phone:</span>${item.phone}</p>
-         <p><span class="lbl">Email:</span>${item.email}</p>`
-      : `<p><span class="lbl">Subject:</span><strong>${item.subject}</strong></p>
-         <p><span class="lbl">Email:</span>${item.email}</p>`;
+    // Sort messages: newest first
+    queue.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
 
-    const actionBtn = item.status === 'pending'
-      ? `<button class="btn btn-primary" onclick="markInquiryResolved('${item.id}')" style="font-size:0.75rem; padding:6px 12px;"><i class="fa-solid fa-check"></i> Process</button>`
-      : `<span style="color:var(--success); font-size:0.8rem; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Processed</span>`;
+    const pendingCount = queue.filter(q => q.status === 'pending').length;
+    countInfo.textContent = `${pendingCount} pending messages in queue`;
 
-    container.innerHTML += `
-      <div class="inbox-card ${isJoin ? 'join' : ''} ${item.status === 'processed' ? 'processed' : ''}">
-        <div class="inbox-card-header">
-          <div>
-            <span class="badge ${tagClass}" style="margin-bottom:6px; display:inline-block;">${item.type}</span>
-            <h4>${item.name}</h4>
+    container.innerHTML = '';
+    
+    if (queue.length === 0) {
+      container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted); border:1px dashed var(--border); border-radius: var(--radius-lg);"><i class="fa-solid fa-inbox" style="font-size:2rem; margin-bottom:12px;"></i><br>Inbox is completely clean.</div>`;
+      return;
+    }
+
+    queue.forEach(item => {
+      const dateFormatted = new Date(item.submittedAt).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+      });
+
+      const bodyDetails = `<p><span class="lbl">Subject:</span><strong>${item.subject}</strong></p>
+           <p><span class="lbl">Email:</span>${item.email}</p>`;
+
+      const actionBtn = item.status === 'pending'
+        ? `<button class="btn btn-primary" onclick="markInquiryResolved('${item.id}')" style="font-size:0.75rem; padding:6px 12px;"><i class="fa-solid fa-check"></i> Process</button>`
+        : `<span style="color:var(--success); font-size:0.8rem; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Processed</span>`;
+
+      container.innerHTML += `
+        <div class="inbox-card ${item.status === 'processed' ? 'processed' : ''}">
+          <div class="inbox-card-header">
+            <div>
+              <span class="badge badge-member" style="margin-bottom:6px; display:inline-block;">Inquiry</span>
+              <h4>${item.name}</h4>
+            </div>
+            <span style="font-size:0.7rem; color:var(--text-muted);">${dateFormatted}</span>
           </div>
-          <span style="font-size:0.7rem; color:var(--text-muted);">${dateFormatted}</span>
+          <div class="inbox-card-body">
+            ${bodyDetails}
+            <p style="margin-top:10px; font-style:italic; font-size:0.8rem; background:var(--background); padding:8px; border-radius:4px; border:1px solid var(--border); color:var(--text-muted);">${item.message}</p>
+          </div>
+          <div class="inbox-card-actions">
+            ${actionBtn}
+          </div>
         </div>
-        <div class="inbox-card-body">
-          ${bodyDetails}
-          <p style="margin-top:10px; font-style:italic; font-size:0.8rem; background:var(--background); padding:8px; border-radius:4px; border:1px solid var(--border); color:var(--text-muted);">${item.details}</p>
-        </div>
-        <div class="inbox-card-actions">
-          ${actionBtn}
-        </div>
-      </div>
-    `;
-  });
+      `;
+    });
+  } catch (error) {
+    console.error('Error loading enquiries queue from database:', error);
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted); border:1px dashed var(--border); border-radius: var(--radius-lg);">Error loading messages from database.</div>`;
+  }
 }
 
 function initInquiriesQueueControls() {
   const clearBtn = document.getElementById('btn-clear-inbox');
-  clearBtn.addEventListener('click', () => {
-    let queue = [];
-    try {
-      queue = JSON.parse(localStorage.getItem('udayan_submitted_enquiries') || '[]');
-    } catch(e) {}
+  if (clearBtn) {
+    // Clone and replace to prevent duplicate listener accumulation
+    const newClearBtn = clearBtn.cloneNode(true);
+    clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
 
-    const remaining = queue.filter(q => q.status === 'pending');
-    localStorage.setItem('udayan_submitted_enquiries', JSON.stringify(remaining));
-    
-    loadEnquiriesQueue();
-    showToast('Inbox Cleared', 'Processed logs deleted successfully.', 'success');
-  });
+    newClearBtn.addEventListener('click', async () => {
+      if (activeCloudProvider === 'none' || (!supabaseClientInstance && !firebaseDbInstance)) {
+        showToast('Error', 'No database connection available.', 'error');
+        return;
+      }
+
+      try {
+        const queue = await CloudApiService.getMessages();
+        if (!queue) {
+          showToast('Error', 'Could not read messages from database.', 'error');
+          return;
+        }
+
+        const processed = queue.filter(q => q.status === 'processed');
+        
+        if (processed.length === 0) {
+          showToast('Inbox Info', 'No processed messages to clear.', 'success');
+          return;
+        }
+
+        for (const item of processed) {
+          try {
+            await CloudApiService.deleteMessage(item.id);
+            console.log('[Udayan Write] Cloud sync successful for deleting Message: ' + item.id);
+          } catch (err) {
+            console.error('[Udayan Write] Cloud message deletion sync failed:', err);
+          }
+        }
+
+        await loadEnquiriesQueue();
+        showToast('Inbox Cleared', 'Processed logs deleted successfully.', 'success');
+      } catch (e) {
+        console.error('Error clearing inbox:', e);
+        showToast('Error', 'Failed to clear processed messages.', 'error');
+      }
+    });
+  }
 }
 
-window.markInquiryResolved = function(id) {
-  let queue = [];
-  try {
-    queue = JSON.parse(localStorage.getItem('udayan_submitted_enquiries') || '[]');
-  } catch(e) {}
+window.markInquiryResolved = async function(id) {
+  if (activeCloudProvider === 'none' || (!supabaseClientInstance && !firebaseDbInstance)) {
+    showToast('Error', 'No database connection available.', 'error');
+    return;
+  }
 
-  const index = queue.findIndex(item => item.id === id);
-  if (index !== -1) {
-    queue[index].status = 'processed';
-    localStorage.setItem('udayan_submitted_enquiries', JSON.stringify(queue));
-    loadEnquiriesQueue();
+  try {
+    await CloudApiService.updateMessage(id, { status: 'processed' });
+    console.log('[Udayan Write] Cloud sync successful for resolving Message: ' + id);
+    await loadEnquiriesQueue();
     showToast('Record Processed', 'Application marked as resolved.', 'success');
+  } catch (err) {
+    console.error('[Udayan Write] Cloud message resolution sync failed:', err);
+    showToast('Error', 'Failed to update message status in database.', 'error');
   }
 };
 
@@ -2209,7 +2140,7 @@ function renderWelcomeCard() {
     
     let queue = [];
     try {
-      queue = JSON.parse(localStorage.getItem('udayan_submitted_enquiries') || '[]');
+      queue = JSON.parse(localStorage.getItem('udayan_submitted_messages') || '[]');
     } catch(e) {}
     const pendingCount = queue.filter(q => q.status === 'pending').length;
 
@@ -2224,7 +2155,7 @@ function renderWelcomeCard() {
       </div>
       <div class="kpi-card">
         <span class="kpi-num">${pendingCount}</span>
-        <span class="kpi-label">Pending Inqs</span>
+        <span class="kpi-label">Pending Msgs</span>
       </div>
     `;
   } else if (role === 'Teacher') {
@@ -2777,6 +2708,65 @@ const CloudApiService = {
       }
     }
     return null;
+  },
+
+  getMessages: async () => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      try {
+        const { data, error } = await supabaseClientInstance
+          .from('messages')
+          .select('*');
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        console.error('Supabase fetch messages failed:', err);
+      }
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      try {
+        const snapshot = await firebaseDbInstance.collection('messages').get();
+        const data = [];
+        snapshot.forEach(doc => data.push(doc.data()));
+        return data;
+      } catch (err) {
+        console.error('Firebase fetch messages failed:', err);
+      }
+    }
+    return null;
+  },
+
+  addMessage: async (newMsg) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('messages')
+        .insert([newMsg]);
+      if (error) throw error;
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      await firebaseDbInstance.collection('messages').doc(newMsg.id).set(newMsg);
+    }
+  },
+
+  updateMessage: async (id, updatedFields) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('messages')
+        .update(updatedFields)
+        .eq('id', id);
+      if (error) throw error;
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      await firebaseDbInstance.collection('messages').doc(id).update(updatedFields);
+    }
+  },
+
+  deleteMessage: async (id) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('messages')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      await firebaseDbInstance.collection('messages').doc(id).delete();
+    }
   }
 };
 
@@ -2809,30 +2799,16 @@ async function syncCloudDataOnLanding() {
     // 3. Sync Persons Directory
     const cloudPersons = await CloudApiService.getPersons();
     if (cloudPersons && cloudPersons.length > 0) {
-      const localPersons = JSON.parse(localStorage.getItem(STORAGE_KEYS.PERSONS) || '[]');
-      const mergedPersons = [...cloudPersons];
-      localPersons.forEach(localPers => {
-        if (!mergedPersons.some(cloudPers => cloudPers.id === localPers.id)) {
-          mergedPersons.push(localPers);
-        }
-      });
-      localStorage.setItem(STORAGE_KEYS.PERSONS, JSON.stringify(mergedPersons));
-      databasePersons = mergedPersons;
+      localStorage.setItem(STORAGE_KEYS.PERSONS, JSON.stringify(cloudPersons));
+      databasePersons = cloudPersons;
       console.log('[Udayan Sync] Persons database verified.');
     }
 
     // 4. Sync Events Schedules
     const cloudEvents = await CloudApiService.getEvents();
     if (cloudEvents && cloudEvents.length > 0) {
-      const localEvents = JSON.parse(localStorage.getItem(STORAGE_KEYS.EVENTS) || '[]');
-      const mergedEvents = [...cloudEvents];
-      localEvents.forEach(localEvt => {
-        if (!mergedEvents.some(cloudEvt => cloudEvt.id === localEvt.id)) {
-          mergedEvents.push(localEvt);
-        }
-      });
-      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(mergedEvents));
-      databaseEvents = mergedEvents;
+      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(cloudEvents));
+      databaseEvents = cloudEvents;
       console.log('[Udayan Sync] Community event planners synchronized.');
     }
 
@@ -3697,10 +3673,14 @@ function updateSiteBannerFromDatabase() {
     try {
       const depts = JSON.parse(raw);
       const general = depts.find(d => d.id === 'general');
-      if (general && general.banner_url) {
-        bannerUrl = convertGoogleDriveLink(general.banner_url);
-      } else if (general && general.about && (general.about.startsWith('http://') || general.about.startsWith('https://'))) {
-        bannerUrl = convertGoogleDriveLink(general.about);
+      if (general) {
+        if (general.banner_url) {
+          bannerUrl = convertGoogleDriveLink(general.banner_url);
+        } else if (general.about && (general.about.startsWith('http://') || general.about.startsWith('https://'))) {
+          bannerUrl = convertGoogleDriveLink(general.about);
+        } else if (general.gallery && general.gallery.length > 0) {
+          bannerUrl = convertGoogleDriveLink(general.gallery[0].url);
+        }
       }
     } catch (e) {
       console.warn('Error reading banner url from departments:', e);
@@ -3709,6 +3689,92 @@ function updateSiteBannerFromDatabase() {
   const bannerImgEl = document.querySelector('.hero-banner-image');
   if (bannerImgEl) {
     bannerImgEl.style.backgroundImage = `url('${bannerUrl}')`;
+  }
+}
+
+function formatPhoneNumber(phone) {
+  if (!phone) return '';
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 10) {
+    return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
+  }
+  return phone;
+}
+
+async function updateContactSection() {
+  const presEl = document.getElementById('contact-rep-president');
+  const secEl = document.getElementById('contact-rep-secretary');
+
+  if (activeCloudProvider === 'none' || (!supabaseClientInstance && !firebaseDbInstance)) {
+    if (presEl && !presEl.dataset.loaded) {
+      presEl.innerHTML = `Loading... (President)`;
+    }
+    if (secEl && !secEl.dataset.loaded) {
+      secEl.innerHTML = `Loading... (General Secretary)`;
+    }
+    return;
+  }
+
+  try {
+    const [depts, persons] = await Promise.all([
+      CloudApiService.getDepartments(),
+      CloudApiService.getPersons()
+    ]);
+    
+    if (depts && persons) {
+      const general = depts.find(d => d.id === 'general');
+      if (general && general.executiveCommittee) {
+        // Find President
+        const presOfficer = general.executiveCommittee.find(m => m.role.toLowerCase().includes('president'));
+        let presidentPhone = null;
+        if (presOfficer) {
+          const presPerson = persons.find(p => p.name.toLowerCase() === presOfficer.name.toLowerCase());
+          if (presPerson && presPerson.phone) {
+            presidentPhone = presPerson.phone;
+          }
+        }
+        
+        // Find General Secretary
+        const secOfficer = general.executiveCommittee.find(m => m.role.toLowerCase().includes('general secretary') || m.role.toLowerCase().includes('secretary'));
+        let secretaryPhone = null;
+        if (secOfficer) {
+          const secPerson = persons.find(p => p.name.toLowerCase() === secOfficer.name.toLowerCase());
+          if (secPerson && secPerson.phone) {
+            secretaryPhone = secPerson.phone;
+          }
+        }
+        
+        if (presEl) {
+          if (presidentPhone) {
+            const formatted = formatPhoneNumber(presidentPhone);
+            presEl.innerHTML = `<a href="tel:${presidentPhone}">${formatted}</a> (President)`;
+            presEl.dataset.loaded = "true";
+          } else {
+            presEl.innerHTML = `Not Available (President)`;
+          }
+        }
+        
+        if (secEl) {
+          if (secretaryPhone) {
+            const formatted = formatPhoneNumber(secretaryPhone);
+            secEl.innerHTML = `<a href="tel:${secretaryPhone}">${formatted}</a> (General Secretary)`;
+            secEl.dataset.loaded = "true";
+          } else {
+            secEl.innerHTML = `Not Available (General Secretary)`;
+          }
+        }
+        return;
+      }
+    }
+  } catch (error) {
+    console.error('Error updating contact section from cloud database:', error);
+  }
+
+  if (presEl && !presEl.dataset.loaded) {
+    presEl.innerHTML = `Unavailable (President)`;
+  }
+  if (secEl && !secEl.dataset.loaded) {
+    secEl.innerHTML = `Unavailable (General Secretary)`;
   }
 }
 
@@ -3820,12 +3886,25 @@ async function saveBannerUrl(newUrl) {
 
     if (activeCloudProvider !== 'none') {
       try {
-        await updateDepartmentRecord('general', { banner_url: newUrl });
+        // Try directly updating the banner_url column on Supabase
+        await CloudApiService.updateDepartment('general', { banner_url: newUrl });
         showToast('Settings Saved', 'Homepage banner URL updated in database successfully.', 'success');
       } catch (dbErr) {
         console.warn('Failed to update banner_url column directly. Retrying using about column fallback...', dbErr);
         try {
-          await updateDepartmentRecord('general', { about: newUrl });
+          // Update the local storage general.about value first
+          try {
+            depts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
+          } catch(e) {}
+          generalIndex = depts.findIndex(d => d.id === 'general');
+          if (generalIndex !== -1) {
+            depts[generalIndex].about = newUrl;
+            localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
+          }
+          updateSiteBannerFromDatabase();
+          
+          // Then update the about column in the cloud database
+          await CloudApiService.updateDepartment('general', { about: newUrl });
           showToast('Settings Saved (Fallback)', 'Saved to department metadata. Please run ALTER TABLE to add banner_url column.', 'warning');
         } catch (fallbackErr) {
           throw new Error('Database update failed. Please ensure database connection is active or run: ALTER TABLE departments ADD COLUMN banner_url TEXT;');

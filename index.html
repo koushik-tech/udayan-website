@@ -98,22 +98,12 @@
             <i class="fa-solid fa-heart"></i> Support Our Cause
           </a>
         </div>
-
-        <div class="hero-stats">
-          <div class="stat-item">
-            <span class="stat-num" id="hero-stat-members">500+</span>
-            <span class="stat-lbl">Members enrolled</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-num" id="hero-stat-depts">9+</span>
-            <span class="stat-lbl">Active Departments</span>
-          </div>
-        </div>
       </div>
 
       <div class="hero-image-wrapper">
-        <div class="hero-art-card" id="hero-event-card-outer">
-          <div class="art-inner" id="hero-event-card-inner">
+        <div class="hero-event-split-card" id="hero-event-card-outer">
+          <!-- Left side: Event Details Panel -->
+          <div class="event-details-panel">
             <div class="art-header">
               <span class="art-tag" id="hero-event-tag">Next Event</span>
               <span class="art-icon" id="hero-event-icon">📅</span>
@@ -127,6 +117,27 @@
                 <h4 id="hero-event-location">Dispensary Wing</h4>
                 <p id="hero-event-date">June 05, 2026</p>
               </div>
+            </div>
+          </div>
+          
+          <!-- Right side: Event Photo Panel -->
+          <div class="event-photo-panel" id="hero-event-card-inner"></div>
+        </div>
+
+        <!-- Premium Row of Stats Card Chips -->
+        <div class="hero-stats-panel">
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-num" id="hero-stat-members">500+</span>
+              <span class="stat-lbl">Members enrolled</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fa-solid fa-sitemap"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-num" id="hero-stat-depts">9+</span>
+              <span class="stat-lbl">Active Wings</span>
             </div>
           </div>
         </div>
@@ -157,7 +168,7 @@
           <i class="fa-solid fa-calendar-plus"></i> Event Planner
         </button>
         <button class="console-tab-btn" data-panel="panel-inquiries" id="tab-inquiries">
-          <i class="fa-solid fa-inbox"></i> Enrolment Inbox
+          <i class="fa-solid fa-inbox"></i> Messages Inbox
         </button>
         <button class="console-tab-btn" data-panel="panel-wings-ledger" id="tab-wings-ledger">
           <i class="fa-solid fa-diagram-project"></i> Wings Ledger
@@ -293,7 +304,7 @@
       <div class="console-view-panel" id="panel-inquiries">
         <div id="inquiries-auth-content">
           <div class="console-filter-bar" style="margin-bottom: 30px;">
-            <p style="flex-grow: 1; font-weight: 500;" id="inquiries-count-info">0 pending applications in queue</p>
+            <p style="flex-grow: 1; font-weight: 500;" id="inquiries-count-info">0 pending messages in queue</p>
             <button class="btn btn-secondary" style="font-size: 0.8rem; padding: 8px 14px;" id="btn-clear-inbox">
               <i class="fa-solid fa-trash-can"></i> Clear Processed Logs
             </button>
@@ -660,14 +671,14 @@
       <div class="contact-info-panel">
         <div>
           <h3>Get In Touch</h3>
-          <p class="info-intro">Have questions regarding our class timings, library registrations, or executive meetings? Reach out to us or apply to join our wings as a volunteer.</p>
+          <p class="info-intro">Have questions regarding our class timings, library registrations, or executive meetings? Reach out to us by sending a message.</p>
           
           <div class="contact-methods">
             <div class="contact-card-item">
               <div class="contact-card-icon"><i class="fa-solid fa-map-location-dot"></i></div>
               <div class="contact-card-details">
                 <h4>Our Address</h4>
-                <p>18/C Feeder Road, Belgharia, Kolkata - 700056</p>
+                <p>Ramakrishna Mission Road, Jatindas Nagar 1 No Block , Belgharia , Kolkata 700056</p>
               </div>
             </div>
 
@@ -675,8 +686,8 @@
               <div class="contact-card-icon"><i class="fa-solid fa-phone-volume"></i></div>
               <div class="contact-card-details">
                 <h4>Call Representatives</h4>
-                <p><a href="tel:+919830098300">+91 98300 98300</a> (President)</p>
-                <p><a href="tel:+919163012345">+91 91630 12345</a> (Volunteer Head)</p>
+                <p id="contact-rep-president">Loading... (President)</p>
+                <p id="contact-rep-secretary">Loading... (General Secretary)</p>
               </div>
             </div>
 
@@ -684,14 +695,14 @@
               <div class="contact-card-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
               <div class="contact-card-details">
                 <h4>Email Support</h4>
-                <p><a href="mailto:contact@udayan.org">contact@udayan.org</a></p>
+                <p><a href="mailto:udayan.belgharia@gmail.com">udayan.belgharia@gmail.com</a></p>
               </div>
             </div>
           </div>
         </div>
 
         <div class="portal-cta">
-          <h4>Already a Member or Officer?</h4>
+          <h4>Already a Member?</h4>
           <p>Access our internal, role-based transaction registers to clear dues, billing receipts, and schedule event rosters directly on-site by logging in.</p>
           <a href="#hero" class="btn btn-secondary" style="font-size: 0.85rem; padding: 10px 16px;" id="btn-cta-login-nav">
             <i class="fa-solid fa-right-to-bracket"></i> Sign In to Account
@@ -700,12 +711,6 @@
       </div>
 
       <div class="form-panel">
-        <!-- Form Switching Tabs -->
-        <div class="form-tabs" id="contact-form-tabs">
-          <button class="form-tab-btn active" data-form="contact-msg-form" id="tab-contact">Send Message</button>
-          <button class="form-tab-btn" data-form="contact-join-form" id="tab-join">Join / Volunteer</button>
-        </div>
-
         <!-- Tab 1: General Contact Form -->
         <form class="interactive-form active" id="contact-msg-form" novalidate>
           <div class="form-row">
@@ -728,45 +733,6 @@
           </div>
           <button type="submit" class="btn btn-primary btn-form-submit" id="btn-submit-message">
             <i class="fa-solid fa-paper-plane"></i> Send Secure Message
-          </button>
-        </form>
-
-        <!-- Tab 2: Join / Enrollment Form -->
-        <form class="interactive-form" id="contact-join-form" novalidate>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="join-name">Full Name</label>
-              <input type="text" id="join-name" class="form-control" placeholder="John Doe" required>
-            </div>
-            <div class="form-group">
-              <label for="join-phone">Phone Number</label>
-              <input type="tel" id="join-phone" class="form-control" placeholder="9876543210" pattern="[0-9]{10}" required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="join-email">Email Address</label>
-              <input type="email" id="join-email" class="form-control" placeholder="john@example.com" required>
-            </div>
-            <div class="form-group">
-              <label for="join-wing">Preferred Wing</label>
-              <select id="join-wing" class="form-control" required>
-                <option value="" disabled selected>Select a wing</option>
-                <option value="cultural-art-school">Art School (Cultural)</option>
-                <option value="cultural-ghungur">Ghungur Dance Academy (Cultural)</option>
-                <option value="sports-yogasana">Mohila Yogasana (Sports)</option>
-                <option value="sports-pranayam">Pranayam (Wellness)</option>
-                <option value="social-dispensary">Dispensary (Social Service)</option>
-                <option value="general-volunteer">General Volunteer</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="join-remarks">Short Background / Notes</label>
-            <textarea id="join-remarks" class="form-control" placeholder="Tell us briefly why you would like to join..." required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary btn-form-submit" id="btn-submit-join">
-            <i class="fa-solid fa-user-plus"></i> Submit Application
           </button>
         </form>
       </div>
