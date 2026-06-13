@@ -14,6 +14,8 @@ const STORAGE_KEYS = {
   SESSION: 'social_org_auth_session'
 };
 
+
+
 // --- DEFAULT SYSTEM DATABASE FALLBACKS (If not pre-seeded by app) ---
 const DEFAULT_USERS_DB = {
   admin: { username: 'admin', password: 'admin123', name: 'System Admin', role: 'Admin' },
@@ -140,7 +142,7 @@ const SEED_DEPARTMENTS = [
     name: 'Dispensary',
     category: 'Social Service',
     icon: '🏥',
-    about: 'Healing hands for the community. Offering daily doctor consultations, vital medical diagnostics, and distribution of generic drugs at subsidized rates to citizens in need.',
+    about: 'Healing hands for the community. Offering daily consultations and medicines at our charitable homeopathic dispensary to citizens in need.',
     timings: 'Daily (except Sundays), 9:00 AM - 12:00 PM & 5:00 PM - 7:00 PM',
     admissionFees: '₹20 (Registration card)',
     monthlyFees: '₹0 (Consultations Free)',
@@ -156,7 +158,7 @@ const SEED_DEPARTMENTS = [
     name: 'Others Service',
     category: 'Social Service',
     icon: '🤝',
-    about: 'Serving beyond boundaries. Coordinating blanket drives, free clothing distribution, local blood donation camps, relief efforts during crises, and environment cleanups.',
+    about: 'Serving beyond boundaries. Coordinating blanket drives, distributing new clothes to underprivileged children, and extending financial support to the poor in need.',
     timings: 'As per planned activities & emergency drives',
     admissionFees: 'Free to participate',
     monthlyFees: 'None',
@@ -1041,6 +1043,9 @@ function initConsoleSystem() {
       panels.forEach(panel => {
         if (panel.getAttribute('id') === targetPanelId) {
           panel.classList.add('active');
+          if (targetPanelId === 'panel-club-notices') {
+            loadClubNotices(activeUserSession.role);
+          }
         } else {
           panel.classList.remove('active');
         }
@@ -1050,6 +1055,19 @@ function initConsoleSystem() {
 
   // Evaluate role-based permissions layers
   const role = activeUserSession.role;
+
+  // Club Notices Dashboard panel authorization and pre-load setup
+  const noticeUploadContainer = document.getElementById('notice-upload-container');
+  const noticeDashboardLayout = document.getElementById('notices-dashboard-layout-el');
+  if (role === 'Admin') {
+    if (noticeUploadContainer) noticeUploadContainer.style.display = 'block';
+    if (noticeDashboardLayout) noticeDashboardLayout.classList.add('admin-layout');
+  } else {
+    if (noticeUploadContainer) noticeUploadContainer.style.display = 'none';
+    if (noticeDashboardLayout) noticeDashboardLayout.classList.remove('admin-layout');
+  }
+  loadClubNotices(role);
+  initNoticePublishTriggers(role);
 
   // 1. Subscription Ledger Permission Check
   const subContent = document.getElementById('subscriptions-auth-content');
@@ -1789,28 +1807,11 @@ function convertGoogleDriveLink(url) {
   if (!url) return '';
   url = url.trim();
   
-  // 1. Matches standard file share: https://drive.google.com/file/d/FILE_ID/view...
-  const driveRegex1 = /https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
-  
-  // 2. Matches alternative share: https://drive.google.com/open?id=FILE_ID or /uc?id=FILE_ID...
-  const driveRegex2 = /https:\/\/drive\.google\.com\/(?:open|uc)\?.*id=([a-zA-Z0-9_-]+)/;
-  
-  // 3. Matches legacy API stream: https://docs.google.com/uc?export=download&id=FILE_ID
-  const driveRegex3 = /https:\/\/docs\.google\.com\/uc\?.*id=([a-zA-Z0-9_-]+)/;
-  
-  const match1 = url.match(driveRegex1);
-  if (match1 && match1[1]) {
-    return `https://lh3.googleusercontent.com/d/${match1[1]}`;
-  }
-  
-  const match2 = url.match(driveRegex2);
-  if (match2 && match2[1]) {
-    return `https://lh3.googleusercontent.com/d/${match2[1]}`;
-  }
-
-  const match3 = url.match(driveRegex3);
-  if (match3 && match3[1]) {
-    return `https://lh3.googleusercontent.com/d/${match3[1]}`;
+  // Matches the Google Drive file ID from standard, multi-account (/u/0/), and legacy link formats
+  const fileIdRegex = /(?:id=|\/d\/|docs\.google\.com\/uc\?.*id=)([a-zA-Z0-9_-]{25,50})/;
+  const match = url.match(fileIdRegex);
+  if (match && match[1]) {
+    return `https://lh3.googleusercontent.com/d/${match[1]}`;
   }
   
   return url;
@@ -1912,7 +1913,7 @@ function initWingsLedgerControls(role) {
     const caption = document.getElementById('wing-new-photo-caption').value.trim() || 'Gallery Showcase';
 
     if (!url) {
-      showToast('Validation Error', 'Please paste an Unsplash image URL.', 'error');
+      showToast('Validation Error', 'Please paste a Google Drive shared link or image URL.', 'error');
       return;
     }
 
@@ -2007,7 +2008,6 @@ function initWingsLedgerControls(role) {
         };
 
         addDepartmentRecord(newDept);
-        showToast('Department Added', `Department "${nameVal}" created successfully!`, 'success');
       } else {
         // Edit Mode
         const index = depts.findIndex(d => d.id === wingId);
@@ -2023,7 +2023,6 @@ function initWingsLedgerControls(role) {
           poc: { name: pocNameVal, role: pocRoleVal, phone: pocPhoneVal },
           gallery: currentEditGallery
         });
-        showToast('Department Saved', `Updates successfully saved for ${nameVal}.`, 'success');
       }
 
       // Refresh both dashboards and hide drawers
@@ -2767,6 +2766,41 @@ const CloudApiService = {
     } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
       await firebaseDbInstance.collection('messages').doc(id).delete();
     }
+  },
+
+  getNotices: async () => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      try {
+        const { data, error } = await supabaseClientInstance
+          .from('notices')
+          .select('*')
+          .order('date', { ascending: false });
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        console.error('Supabase fetch notices failed:', err);
+      }
+    }
+    return [];
+  },
+
+  addNotice: async (newNotice) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('notices')
+        .insert([newNotice]);
+      if (error) throw error;
+    }
+  },
+
+  deleteNotice: async (id) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('notices')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    }
   }
 };
 
@@ -2871,6 +2905,8 @@ async function addDepartmentRecord(newDept) {
   try {
     depts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
   } catch(e) {}
+  
+  // Optimistically add to local cache
   depts.push(newDept);
   localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
   
@@ -2880,9 +2916,27 @@ async function addDepartmentRecord(newDept) {
     try {
       await CloudApiService.addDepartment(newDept);
       console.log('[Udayan Write] Cloud sync successful for Department Addition: ' + newDept.id);
+      showToast('Department Added', `Department "${newDept.name}" created successfully!`, 'success');
     } catch(err) {
       console.error('[Udayan Write] Cloud department creation failed:', err);
+      
+      // Revert local cache on failure
+      try {
+        depts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
+        depts = depts.filter(d => d.id !== newDept.id);
+        localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
+      } catch(revertErr) {}
+      
+      updateHeroStatistics();
+      const role = activeUserSession ? activeUserSession.role : 'Admin';
+      loadWingsLedger(role);
+      syncAndRenderWings();
+      
+      const errMsg = err.message || err.details || JSON.stringify(err);
+      showToast('Database Sync Error', `Failed to create department in database: ${errMsg}`, 'error');
     }
+  } else {
+    showToast('Department Added Local', `Department "${newDept.name}" created locally (Offline mode).`, 'success');
   }
 }
 
@@ -2893,6 +2947,10 @@ async function updateDepartmentRecord(deptId, updatedFields) {
   } catch(e) {}
   const index = depts.findIndex(d => d.id === deptId);
   if (index === -1) return;
+
+  const originalDept = { ...depts[index] };
+
+  // Optimistically update local cache
   depts[index] = { ...depts[index], ...updatedFields };
   localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
   
@@ -2902,9 +2960,30 @@ async function updateDepartmentRecord(deptId, updatedFields) {
     try {
       await CloudApiService.updateDepartment(deptId, updatedFields);
       console.log('[Udayan Write] Cloud sync successful for Department Mutation: ' + deptId);
+      showToast('Department Saved', `Updates successfully saved for ${updatedFields.name || deptId}.`, 'success');
     } catch(err) {
       console.error('[Udayan Write] Cloud department update failed:', err);
+      
+      // Revert local cache on failure
+      try {
+        depts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
+        const revIndex = depts.findIndex(d => d.id === deptId);
+        if (revIndex !== -1) {
+          depts[revIndex] = originalDept;
+          localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
+        }
+      } catch(revertErr) {}
+      
+      updateHeroStatistics();
+      const role = activeUserSession ? activeUserSession.role : 'Admin';
+      loadWingsLedger(role);
+      syncAndRenderWings();
+      
+      const errMsg = err.message || err.details || JSON.stringify(err);
+      showToast('Database Sync Error', `Failed to save changes to database: ${errMsg}`, 'error');
     }
+  } else {
+    showToast('Department Saved Local', `Updates saved locally (Offline mode) for ${updatedFields.name || deptId}.`, 'success');
   }
 }
 
@@ -3919,6 +3998,142 @@ async function saveBannerUrl(newUrl) {
     showToast('Failed to Save', err.message, 'error');
   }
 }
+
+// ==============================================
+// CLUB NOTICES DASHBOARD LOGIC
+// ==============================================
+async function loadClubNotices(role) {
+  const container = document.getElementById('notices-cards-container');
+  const countInfo = document.getElementById('notices-count-info');
+  if (!container) return;
+
+  container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i>Loading notices...</div>';
+
+  try {
+    const notices = await CloudApiService.getNotices();
+    container.innerHTML = '';
+    
+    if (!notices || notices.length === 0) {
+      container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">No notices posted yet.</div>';
+      if (countInfo) countInfo.textContent = '0 notices posted';
+      return;
+    }
+
+    if (countInfo) {
+      countInfo.textContent = `${notices.length} notice${notices.length === 1 ? '' : 's'} posted`;
+    }
+
+    notices.forEach(notice => {
+      const dateFormatted = new Date(notice.date).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      });
+      const directImgUrl = convertGoogleDriveLink(notice.image_url);
+      
+      const deleteBtnHtml = role === 'Admin' 
+        ? `<button class="btn-delete-notice" onclick="deleteNoticeItem(${notice.id}, '${notice.title.replace(/'/g, "\\'")}')" title="Delete Notice"><i class="fa-solid fa-trash-can"></i></button>`
+        : '';
+
+      container.innerHTML += `
+        <div class="notice-card" data-id="${notice.id}">
+          <div class="notice-card-header">
+            <span class="notice-card-date"><i class="fa-regular fa-calendar"></i> ${dateFormatted}</span>
+            ${deleteBtnHtml}
+          </div>
+          <div class="notice-card-body">
+            <h4>${notice.title}</h4>
+            <div class="notice-thumbnail" onclick="zoomPhoto('${directImgUrl}', '${notice.title.replace(/'/g, "\\'")}')" title="Click to view full notice">
+              <img src="${directImgUrl}" alt="${notice.title} image preview" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=400&q=80';">
+              <div class="notice-thumbnail-overlay">
+                <i class="fa-solid fa-magnifying-glass-plus"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  } catch (err) {
+    console.error('Error loading club notices:', err);
+    container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--error);">Failed to load notices. Please check connection.</div>';
+  }
+}
+
+let noticeTriggersInitialized = false;
+function initNoticePublishTriggers(role) {
+  if (role !== 'Admin' || noticeTriggersInitialized) return;
+
+  const form = document.getElementById('notice-publish-form');
+  if (form) {
+    // Set default date to today
+    const dateInput = document.getElementById('notice-form-date');
+    if (dateInput) {
+      dateInput.value = new Date().toISOString().split('T')[0];
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const titleInput = document.getElementById('notice-form-title');
+      const dateInput = document.getElementById('notice-form-date');
+      const imgInput = document.getElementById('notice-form-image');
+
+      const title = titleInput.value.trim();
+      const date = dateInput.value;
+      const imageUrl = imgInput.value.trim();
+
+      if (!title || !date || !imageUrl) {
+        showToast('Validation Error', 'All fields are required.', 'error');
+        return;
+      }
+
+      showLoader('Publishing notice...');
+      try {
+        const newNotice = {
+          title,
+          date,
+          image_url: imageUrl
+        };
+        await CloudApiService.addNotice(newNotice);
+        showToast('Notice Published', 'The notice has been successfully published.', 'success');
+        
+        // Reset form
+        titleInput.value = '';
+        imgInput.value = '';
+        dateInput.value = new Date().toISOString().split('T')[0];
+
+        // Reload notices
+        await loadClubNotices(role);
+      } catch (err) {
+        console.error('Failed to publish notice:', err);
+        showToast('Publish Failed', 'Failed to save notice. Please check database configuration.', 'error');
+      } finally {
+        hideLoader();
+      }
+    });
+
+    noticeTriggersInitialized = true;
+  }
+}
+
+// Global delete notice handler
+window.deleteNoticeItem = async function(id, title) {
+  const confirmDelete = confirm(`Are you sure you want to delete the notice "${title}"?`);
+  if (!confirmDelete) return;
+
+  showLoader('Deleting notice...');
+  try {
+    await CloudApiService.deleteNotice(id);
+    showToast('Notice Deleted', 'The notice has been successfully removed.', 'success');
+    
+    // Reload notices
+    const role = activeUserSession ? activeUserSession.role : 'Member';
+    await loadClubNotices(role);
+  } catch (err) {
+    console.error('Failed to delete notice:', err);
+    showToast('Delete Failed', 'Failed to remove notice from the database.', 'error');
+  } finally {
+    hideLoader();
+  }
+};
 
 
 

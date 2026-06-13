@@ -158,6 +158,9 @@
         <button class="console-tab-btn active" data-panel="panel-subscriptions" id="tab-subscriptions">
           <i class="fa-solid fa-credit-card"></i> Subscriptions Ledger
         </button>
+        <button class="console-tab-btn" data-panel="panel-club-notices" id="tab-club-notices">
+          <i class="fa-solid fa-bullhorn"></i> Club Notices
+        </button>
         <button class="console-tab-btn" data-panel="panel-members-directory" id="tab-members-directory">
           <i class="fa-solid fa-users"></i> Members Directory
         </button>
@@ -254,6 +257,48 @@
               </div>
             </div>
 
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Panel: Club Notices -->
+      <div class="console-view-panel" id="panel-club-notices">
+        <div id="notices-auth-content">
+          <div class="notices-dashboard-layout" id="notices-dashboard-layout-el">
+            <!-- Left: Notices list -->
+            <div>
+              <div class="console-filter-bar" style="margin-bottom: 24px;">
+                <p style="flex-grow: 1; font-weight: 500;" id="notices-count-info">0 notices posted</p>
+              </div>
+              <div class="notices-grid" id="notices-cards-container">
+                <!-- Loaded dynamically in script.js -->
+              </div>
+            </div>
+
+            <!-- Right: Publish Notice Form (Admin only) -->
+            <div class="notice-form-card" id="notice-upload-container" style="display: none;">
+              <h3><i class="fa-solid fa-cloud-arrow-up" style="color: var(--secondary);"></i> Publish Club Notice</h3>
+              <form id="notice-publish-form" novalidate>
+                <div class="form-group">
+                  <label for="notice-form-title">Notice Title</label>
+                  <input type="text" id="notice-form-title" class="form-control" placeholder="E.g. Holiday Notice: Eid-ul-Fitr" required>
+                </div>
+                <div class="form-group">
+                  <label for="notice-form-date">Notice Date</label>
+                  <input type="date" id="notice-form-date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label for="notice-form-image">Scanned Notice Image URL</label>
+                  <input type="url" id="notice-form-image" class="form-control" placeholder="Paste Google Drive shared link or image URL..." required>
+                  <small class="form-hint" style="color: var(--text-muted); font-size: 0.75rem; margin-top: 6px; display: block; line-height: 1.4;">
+                    Supports direct image links and standard Google Drive share links.
+                  </small>
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-submit-notice" style="width: 100%; justify-content: center; padding: 12px; margin-top: 12px;">
+                  <i class="fa-solid fa-bullhorn"></i> Publish Notice
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -421,7 +466,7 @@
                 </div>
                 
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                  <input type="url" id="wing-new-photo-url" class="form-control" style="flex: 1; min-width: 240px;" placeholder="Paste Unsplash Image URL...">
+                  <input type="url" id="wing-new-photo-url" class="form-control" style="flex: 1; min-width: 240px;" placeholder="Paste Google Drive shared link or Image URL...">
                   <input type="text" id="wing-new-photo-caption" class="form-control" style="width: 180px;" placeholder="Photo Caption">
                   <button type="button" class="btn btn-secondary" id="btn-wing-add-photo" style="padding: 10px 16px; background: var(--primary-light); color: var(--primary);"><i class="fa-solid fa-plus"></i> Add Photo</button>
                 </div>
@@ -469,7 +514,7 @@
           <div class="val-box">
             <div class="val-icon">🎨</div>
             <h3>Heritage</h3>
-            <p>Cultivating classical arts, classical music, and fine drama skills.</p>
+            <p>Cultivating recitation classes, art school, and dance school.</p>
           </div>
           <div class="val-box">
             <div class="val-icon">🧘‍♀️</div>
@@ -479,7 +524,7 @@
           <div class="val-box">
             <div class="val-icon">🌳</div>
             <h3>Service</h3>
-            <p>Sustaining generic medicines distribution and disaster reliefs.</p>
+            <p>Running a charitable homeopathic dispensary, distributing clothes to underprivileged children, and extending financial support to the poor in need.</p>
           </div>
         </div>
       </div>
@@ -607,8 +652,8 @@
           <div class="cause-chip-item">
             <div class="cause-item-icon"><i class="fa-solid fa-kit-medical"></i></div>
             <div class="cause-item-text">
-              <h4>Subsidized Medical Kits</h4>
-              <p>Providing generic prescriptions for underprivileged local residents.</p>
+              <h4>Homeopathic Dispensary</h4>
+              <p>Providing free homeopathic consultations and medicines for local residents in need.</p>
             </div>
           </div>
 
@@ -751,7 +796,7 @@
           </div>
           <div class="brand-text" style="color: white;">Udayan</div>
         </a>
-        <p>A zero-compromise, premium community platform connecting cultural education, library archives, athletic wellness, and generic medicinal care under a cohesive development matrix.</p>
+        <p>A zero-compromise, premium community platform connecting cultural education, library archives, athletic wellness, and charitable homeopathic care under a cohesive development matrix.</p>
         <div class="social-links">
           <a href="#" class="social-icon" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
           <a href="#" class="social-icon" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
