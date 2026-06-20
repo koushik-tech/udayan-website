@@ -37,6 +37,7 @@
           <li><a href="#leadership" class="nav-link" id="link-leadership">Leadership</a></li>
           <li><a href="#departments" class="nav-link" id="link-depts">Our Wings</a></li>
           <li><a href="#events" class="nav-link" id="link-events">Events</a></li>
+          <li><a href="#gallery" class="nav-link" id="link-gallery">Gallery</a></li>
           <li><a href="#donation" class="nav-link" id="link-donation">Donate</a></li>
           <li><a href="#contact" class="nav-link" id="link-contact">Contact Us</a></li>
         </ul>
@@ -47,12 +48,6 @@
         <button class="btn-theme-toggle" id="theme-toggle-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Light/Dark Theme">
           <i class="fa-solid fa-moon"></i>
         </button>
-        
-        <!-- Database Sync Status Badge -->
-        <div id="db-sync-status-badge" style="font-size: 0.7rem; font-weight: 700; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-round); padding: 6px 12px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted);">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: #64748b;" id="db-sync-dot"></span>
-          <span id="db-sync-text">Loading Sync...</span>
-        </div>
         
         <!-- On-Site Log In Triggers -->
         <button class="btn btn-primary" id="btn-login-trigger" style="padding: 10px 18px; font-size: 0.85rem;">
@@ -175,6 +170,9 @@
         </button>
         <button class="console-tab-btn" data-panel="panel-wings-ledger" id="tab-wings-ledger">
           <i class="fa-solid fa-diagram-project"></i> Wings Ledger
+        </button>
+        <button class="console-tab-btn" data-panel="panel-donations" id="tab-donations" style="display: none;">
+          <i class="fa-solid fa-hand-holding-dollar"></i> Donations Tracker
         </button>
         <button class="console-tab-btn" data-panel="panel-site-settings" id="tab-site-settings" style="display: none;">
           <i class="fa-solid fa-gears"></i> Site Settings
@@ -491,6 +489,11 @@
         <!-- Renders Dynamically in script.js -->
       </div>
 
+      <!-- Tab Panel 8: Donations Tracker (Admin only) -->
+      <div class="console-view-panel" id="panel-donations">
+        <!-- Renders Dynamically in script.js -->
+      </div>
+
       <!-- Tab Panel 7: Site Settings (Admin only) -->
       <div class="console-view-panel" id="panel-site-settings">
         <!-- Renders Dynamically in script.js -->
@@ -558,7 +561,7 @@
             <span class="leadership-card-tag">Governing Body</span>
           </div>
           <div class="leadership-card-content">
-            <h3>Executive Committee</h3>
+            <h3 id="exec-committee-heading">Executive Committee</h3>
             <p>Formulates organizational policies, audits budgets, and oversees volunteer campaigns to steer Udayan's community wellness and healthcare drives.</p>
             
             <div class="member-roster-box">
@@ -640,6 +643,24 @@
   </section>
 
   <!-- ============================================== -->
+  <!-- 5.5 CAMPUS GALLERY SECTION -->
+  <!-- ============================================== -->
+  <section class="gallery" id="gallery">
+    <div class="container">
+      <div class="section-header">
+        <h2>Campus Gallery</h2>
+        <p>Explore beautiful memories, cultural events, and activities across our departments.</p>
+      </div>
+
+      <!-- Filter Buttons for Gallery -->
+      <div class="gallery-filters" id="gallery-filters-wrapper"></div>
+
+      <!-- Gallery Grid -->
+      <div class="gallery-grid" id="gallery-photos-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
   <!-- 6. PREMIUM DONATION CALCULATOR PORTAL -->
   <!-- ============================================== -->
   <section class="donation" id="donation">
@@ -689,6 +710,16 @@
         <div class="donation-input-wrapper">
           <span class="donation-input-currency">₹</span>
           <input type="number" class="donation-input" id="donation-custom-input" value="500" min="50" placeholder="Enter amount">
+        </div>
+
+        <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+          <label for="donation-donor-name" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 6px;">Donor Name</label>
+          <input type="text" id="donation-donor-name" class="form-control" placeholder="Enter your full name" required>
+        </div>
+
+        <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+          <label for="donation-donor-email" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 6px;">Email Address</label>
+          <input type="email" id="donation-donor-email" class="form-control" placeholder="Enter your email" required>
         </div>
 
         <div class="widget-select-group">
@@ -931,6 +962,8 @@
     <div class="loading-text" id="loading-text">Loading...</div>
   </div>
 
+  <!-- jsPDF CDN Client for Receipt Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <!-- Supabase CDN Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Firebase Compat CDN Clients -->

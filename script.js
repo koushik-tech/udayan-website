@@ -11,7 +11,8 @@ const STORAGE_KEYS = {
   EVENTS: 'social_org_db_events',
   DEPARTMENTS: 'social_org_db_departments',
   USERS: 'social_org_users_database',
-  SESSION: 'social_org_auth_session'
+  SESSION: 'social_org_auth_session',
+  DONATIONS: 'social_org_db_donations'
 };
 
 
@@ -282,6 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateCommitteesList();
   updateSiteBannerFromDatabase();
   updateContactSection();
+  renderGallerySection();
   
   // Initialize secure cloud connection and trigger landing sync
   initCloudDatabase();
@@ -445,15 +447,25 @@ function initDatabaseState() {
         { name: 'Rohan Banerjee', role: 'Sports Coordinator' },
         { name: 'Keya Das', role: 'Student Coordinator' }
       ],
-      banner_url: ''
+      banner_url: 'udayan_banner.png',
+      banner_images: [
+        'udayan_banner.png',
+        'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=80'
+      ],
+      slideshow_enabled: true,
+      slideshow_interval: 5,
+      committeeYears: '2024-26'
     };
     const deptsSeed = SEED_DEPARTMENTS.concat([generalDefault]);
     localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(deptsSeed));
   } else {
     try {
       const depts = JSON.parse(storedDepts);
-      if (!depts.some(d => d.id === 'general')) {
-        depts.push({
+      let general = depts.find(d => d.id === 'general');
+      if (!general) {
+        general = {
           id: 'general',
           name: 'General',
           category: 'General',
@@ -468,11 +480,73 @@ function initDatabaseState() {
             { name: 'Rohan Banerjee', role: 'Sports Coordinator' },
             { name: 'Keya Das', role: 'Student Coordinator' }
           ],
-          banner_url: ''
-        });
+          banner_url: 'udayan_banner.png',
+          banner_images: [
+            'udayan_banner.png',
+            'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=80'
+          ],
+          slideshow_enabled: true,
+          slideshow_interval: 5,
+          committeeYears: '2024-26'
+        };
+        depts.push(general);
         localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
+      } else {
+        let updated = false;
+        if (general.committeeYears === undefined) {
+          general.committeeYears = '2024-26';
+          updated = true;
+        }
+        if (general.banner_images === undefined) {
+          general.banner_images = [
+            general.banner_url || 'udayan_banner.png',
+            'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=80'
+          ];
+          updated = true;
+        }
+        if (general.slideshow_enabled === undefined) {
+          general.slideshow_enabled = true;
+          updated = true;
+        }
+        if (general.slideshow_interval === undefined) {
+          general.slideshow_interval = 5;
+          updated = true;
+        }
+        if (updated) {
+          localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
+        }
       }
     } catch(e) {}
+  }
+
+  // 6. Donations DB
+  let storedDonations = localStorage.getItem(STORAGE_KEYS.DONATIONS);
+  if (!storedDonations) {
+    const seedDonations = [
+      {
+        id: 'don-1',
+        donorName: 'Sudipta Sengupta',
+        donorEmail: 'sudipta.s@example.com',
+        amount: 1500,
+        cause: 'Healthcare & Community Dispensary',
+        date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        referenceId: 'REF-837482910'
+      },
+      {
+        id: 'don-2',
+        donorName: 'Amitabha Chaudhuri',
+        donorEmail: 'amitabha.c@example.com',
+        amount: 3000,
+        cause: 'Library Books & Archival Upkeep',
+        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        referenceId: 'REF-294710482'
+      }
+    ];
+    localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(seedDonations));
   }
 }
 
@@ -691,8 +765,11 @@ function initModalCloseTriggers() {
 function zoomPhoto(imgUrl, caption) {
   const lightbox = document.getElementById('site-lightbox-overlay');
   const lightboxImg = document.getElementById('site-lightbox-img');
-  lightboxImg.src = imgUrl;
-  lightbox.classList.add('active');
+  const captionEl = document.getElementById('site-lightbox-caption');
+  
+  if (lightboxImg) lightboxImg.src = imgUrl;
+  if (captionEl) captionEl.textContent = caption || '';
+  if (lightbox) lightbox.classList.add('active');
 }
 
 function closeLightbox() {
@@ -810,75 +887,377 @@ function initDonationWidget() {
     });
   });
 
-  donateBtn.addEventListener('click', () => {
+  donateBtn.addEventListener('click', async () => {
     const amt = parseFloat(customInput.value);
     const causeName = causeSelect.options[causeSelect.selectedIndex].text;
+    const nameInput = document.getElementById('donation-donor-name');
+    const emailInput = document.getElementById('donation-donor-email');
+    const donorName = nameInput ? nameInput.value.trim() : '';
+    const donorEmail = emailInput ? emailInput.value.trim() : '';
 
     if (isNaN(amt) || amt < 50) {
       showToast('Validation Error', 'Minimum donation amount is ₹50.', 'error');
       return;
     }
 
-    openDonationReceipt(amt, causeName);
+    if (!donorName) {
+      showToast('Validation Error', 'Please enter your name.', 'error');
+      return;
+    }
+
+    if (!donorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donorEmail)) {
+      showToast('Validation Error', 'Please enter a valid email address.', 'error');
+      return;
+    }
+
+    const refNumber = `REF-${Math.floor(100000000 + Math.random() * 900000000)}`;
+    const newDonation = {
+      id: `don-${Date.now()}`,
+      donorName,
+      donorEmail,
+      amount: amt,
+      cause: causeName,
+      date: new Date().toISOString(),
+      referenceId: refNumber
+    };
+
+    // Save locally
+    let donations = [];
+    try {
+      donations = JSON.parse(localStorage.getItem(STORAGE_KEYS.DONATIONS) || '[]');
+    } catch (e) {}
+    donations.push(newDonation);
+    localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(donations));
+
+    // Save cloud
+    if (activeCloudProvider !== 'none') {
+      try {
+        await CloudApiService.addDonation({
+          id: newDonation.id,
+          donor_name: newDonation.donorName,
+          donor_email: newDonation.donorEmail,
+          amount: newDonation.amount,
+          cause: newDonation.cause,
+          date: newDonation.date,
+          reference_id: newDonation.referenceId
+        });
+      } catch (err) {
+        console.warn('Cloud donation save failed:', err);
+      }
+    }
+
+    // Reset donation inputs
+    if (nameInput) nameInput.value = '';
+    if (emailInput) emailInput.value = '';
+
+    openDonationReceipt(newDonation);
   });
 }
 
-function openDonationReceipt(amount, cause) {
+function openDonationReceipt(donation) {
   const modalOverlay = document.getElementById('site-modal-overlay');
   const modalTitle = document.getElementById('site-modal-title');
   const modalBody = document.getElementById('site-modal-body');
 
-  const refNumber = `REF-${Math.floor(100000000 + Math.random() * 900000000)}`;
-  const dateStr = new Date().toLocaleDateString('en-IN', {
+  const dateStr = new Date(donation.date).toLocaleDateString('en-IN', {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
   });
 
   modalTitle.textContent = `🎉 Contribution Acknowledged!`;
   modalBody.innerHTML = `
     <div class="receipt-wrapper">
-      <div class="receipt-icon"><i class="fa-solid fa-circle-check"></i></div>
-      <h3>Thank You for Your Support!</h3>
-      <p style="font-size:0.875rem; color:var(--text-muted);">Your transaction was processed successfully in demo mode.</p>
+      <div class="receipt-icon" style="color:var(--secondary); font-size:3rem; margin-bottom:12px;"><i class="fa-solid fa-circle-check"></i></div>
+      <h3>Thank You for Your Support, ${donation.donorName}!</h3>
+      <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom: 20px;">Your transaction was processed successfully.</p>
       
-      <div class="receipt-amount">₹${amount.toLocaleString('en-IN')}</div>
+      <div class="receipt-amount" style="font-size:2.25rem; font-weight:800; color:var(--primary); margin-bottom:20px;">₹${donation.amount.toLocaleString('en-IN')}</div>
       
-      <div class="receipt-details-list">
-        <div class="receipt-row">
-          <span class="label">Priority Cause:</span>
-          <span class="val">${cause}</span>
+      <div class="receipt-details-list" style="background:var(--background); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:20px; text-align:left;">
+        <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--border);">
+          <span class="label" style="color:var(--text-muted); font-weight:600;">Donor Name:</span>
+          <span class="val" style="font-weight:700;">${donation.donorName}</span>
         </div>
-        <div class="receipt-row">
-          <span class="label">Reference ID:</span>
-          <span class="val" style="font-family:monospace; color:var(--primary);">${refNumber}</span>
+        <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--border);">
+          <span class="label" style="color:var(--text-muted); font-weight:600;">Email Address:</span>
+          <span class="val" style="font-weight:700;">${donation.donorEmail}</span>
         </div>
-        <div class="receipt-row">
-          <span class="label">Date & Time:</span>
-          <span class="val">${dateStr}</span>
+        <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--border);">
+          <span class="label" style="color:var(--text-muted); font-weight:600;">Cause:</span>
+          <span class="val" style="font-weight:700;">${donation.cause}</span>
         </div>
-        <div class="receipt-row">
-          <span class="label">Status:</span>
-          <span class="val" style="color:var(--success);">Demo Secured</span>
+        <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--border);">
+          <span class="label" style="color:var(--text-muted); font-weight:600;">Reference ID:</span>
+          <span class="val" style="font-family:monospace; color:var(--primary); font-weight:700;">${donation.referenceId}</span>
+        </div>
+        <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0;">
+          <span class="label" style="color:var(--text-muted); font-weight:600;">Date:</span>
+          <span class="val" style="font-weight:700;">${dateStr}</span>
         </div>
       </div>
 
       <div style="display:flex; flex-direction:column; gap:12px;">
-        <button class="btn btn-primary" onclick="closeSiteModal(); printReceiptMockup('${refNumber}', ${amount})" style="width:100%; justify-content:center;">
-          <i class="fa-solid fa-print"></i> Download Voucher PDF
+        <button class="btn btn-primary" id="btn-download-pdf-receipt" style="width:100%; justify-content:center; padding: 12px 0;">
+          <i class="fa-solid fa-file-pdf"></i> Download Receipt PDF
         </button>
-        <button class="btn btn-secondary" onclick="closeSiteModal()" style="width:100%; justify-content:center;">
+        <button class="btn btn-secondary" onclick="closeSiteModal()" style="width:100%; justify-content:center; padding: 12px 0;">
           Return to Website
         </button>
       </div>
     </div>
   `;
 
+  const downloadBtn = document.getElementById('btn-download-pdf-receipt');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      generateReceiptPDF(donation);
+    });
+  }
+
   modalOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
-window.printReceiptMockup = function(ref, amt) {
-  alert(`[Demo Printer Stack]\nReceipt Reference: ${ref}\nContribution Amount: ₹${amt}\n\nYour PDF voucher receipt download completed.`);
+function generateReceiptPDF(donation) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const primaryColor = [99, 102, 241]; 
+  const secondaryColor = [13, 148, 136]; 
+  const darkColor = [15, 23, 42]; 
+  const lightBg = [248, 250, 252]; 
+  
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(1);
+  doc.rect(10, 10, 190, 277);
+  
+  doc.setFillColor(...primaryColor);
+  doc.rect(10, 10, 190, 8, 'F');
+  
+  doc.setFillColor(...secondaryColor);
+  doc.rect(20, 28, 12, 12, 'F');
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(22);
+  doc.setTextColor(...darkColor);
+  doc.text("UDAYAN", 36, 37);
+  
+  doc.setFont("Helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text("Ramakrishna Mission Road, Belgharia, Kolkata 700056", 36, 42);
+
+  doc.setDrawColor(226, 232, 240);
+  doc.line(20, 50, 190, 50);
+
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(...secondaryColor);
+  doc.text("DONATION RECEIPT", 20, 62);
+
+  doc.setFont("Helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Receipt Date: ${new Date(donation.date).toLocaleDateString('en-IN')}`, 130, 60);
+  doc.text(`Receipt No: ${donation.referenceId}`, 130, 65);
+
+  doc.setFont("Helvetica", "normal");
+  doc.setFontSize(10.5);
+  doc.setTextColor(...darkColor);
+  
+  const introText = `Dear ${donation.donorName},\n\nThank you for your generous contribution to Udayan Social Organisation. Your donation makes a real difference in keeping our free homeopathic dispensary, public library, and children's fine art training schools fully operational.`;
+  const splitText = doc.splitTextToSize(introText, 170);
+  doc.text(splitText, 20, 80);
+
+  doc.setFillColor(...lightBg);
+  doc.rect(20, 120, 170, 60, 'F');
+  doc.setDrawColor(203, 213, 225);
+  doc.rect(20, 120, 170, 60);
+
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(...primaryColor);
+  doc.text("Contribution Summary", 26, 128);
+  doc.line(26, 131, 184, 131);
+
+  doc.setFont("Helvetica", "normal");
+  doc.setTextColor(...darkColor);
+  
+  doc.text("Donor Name:", 26, 138);
+  doc.setFont("Helvetica", "bold");
+  doc.text(donation.donorName, 70, 138);
+  
+  doc.setFont("Helvetica", "normal");
+  doc.text("Donor Email:", 26, 144);
+  doc.text(donation.donorEmail, 70, 144);
+
+  doc.text("Cause / Wing Name:", 26, 150);
+  doc.text(donation.cause, 70, 150);
+
+  doc.text("Transaction Status:", 26, 156);
+  doc.setTextColor(22, 163, 74); 
+  doc.setFont("Helvetica", "bold");
+  doc.text("Secured (Completed)", 70, 156);
+
+  doc.line(26, 162, 184, 162);
+  
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...darkColor);
+  doc.text("Total Contributed:", 26, 171);
+  doc.setFontSize(13);
+  doc.setTextColor(...primaryColor);
+  doc.text(`INR ${donation.amount.toLocaleString('en-IN')}.00`, 70, 171);
+
+  doc.setFont("Helvetica", "italic");
+  doc.setFontSize(9);
+  doc.setTextColor(100, 116, 139);
+  doc.text("This is an electronically generated receipt. No physical signature is required.", 20, 200);
+
+  doc.setFont("Helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...darkColor);
+  
+  doc.text("Authorized Representative", 130, 225);
+  doc.setFont("Helvetica", "bold");
+  doc.text("Udayan Committee Office", 130, 229);
+  
+  doc.setDrawColor(...secondaryColor);
+  doc.rect(130, 235, 38, 12);
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...secondaryColor);
+  doc.text("VERIFIED SECURE", 133, 243);
+
+  doc.setFillColor(...secondaryColor);
+  doc.rect(10, 279, 190, 8, 'F');
+
+  doc.save(`Udayan_Donation_${donation.referenceId}.pdf`);
+  showToast('Receipt Downloaded', 'Your donation PDF voucher has been generated successfully.', 'success');
+}
+
+function getDonationsDashboardHtml() {
+  return `
+    <div>
+      <div class="console-filter-bar" style="margin-bottom: 20px;">
+        <input type="text" class="console-search-input" id="donations-search" placeholder="Search donations by donor name or reference ID...">
+        <select id="donations-cause-filter" class="form-control" style="width: 220px; padding: 10px;">
+          <option value="all">All Causes</option>
+          <option value="Healthcare & Community Dispensary">Healthcare & Community Dispensary</option>
+          <option value="Library Books & Archival Upkeep">Library Books & Archival Upkeep</option>
+          <option value="Children's Fine Arts & Dance school">Children's Fine Arts & Dance school</option>
+          <option value="General Contribution / Maintenance">General Contribution / Maintenance</option>
+        </select>
+        <p style="font-weight: 500; margin-left: 20px;" id="donations-summary-text">Total Collected: ₹0</p>
+      </div>
+
+      <div class="table-responsive">
+        <table class="transaction-table">
+          <thead>
+            <tr>
+              <th>Donor Name</th>
+              <th>Donor Email</th>
+              <th>Cause / Project</th>
+              <th>Amount</th>
+              <th>Date & Time</th>
+              <th>Reference ID</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="donations-table-body">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function loadDonationsList() {
+  const tbody = document.getElementById('donations-table-body');
+  if (!tbody) return;
+
+  const searchInput = document.getElementById('donations-search');
+  const causeFilter = document.getElementById('donations-cause-filter');
+  const summaryText = document.getElementById('donations-summary-text');
+
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const filterCause = causeFilter ? causeFilter.value : 'all';
+
+  let donations = [];
+  try {
+    donations = JSON.parse(localStorage.getItem(STORAGE_KEYS.DONATIONS) || '[]');
+  } catch (e) {}
+
+  let filtered = donations;
+  if (query) {
+    filtered = filtered.filter(d => 
+      d.donorName.toLowerCase().includes(query) || 
+      d.referenceId.toLowerCase().includes(query)
+    );
+  }
+  if (filterCause !== 'all') {
+    filtered = filtered.filter(d => d.cause === filterCause);
+  }
+
+  filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const totalCollected = filtered.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+  if (summaryText) {
+    summaryText.innerHTML = `Total Collected: <strong>₹${totalCollected.toLocaleString('en-IN')}</strong> (${filtered.length} donations)`;
+  }
+
+  tbody.innerHTML = '';
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No donations match the filter query.</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(d => {
+    const dateFormatted = new Date(d.date).toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${d.donorName}</strong></td>
+        <td><a href="mailto:${d.donorEmail}" style="color:var(--primary); text-decoration:none;">${d.donorEmail}</a></td>
+        <td>${d.cause}</td>
+        <td><strong style="color:var(--primary);">₹${parseFloat(d.amount).toLocaleString('en-IN')}</strong></td>
+        <td>${dateFormatted}</td>
+        <td><span style="font-family:monospace; font-size:0.85rem;">${d.referenceId}</span></td>
+        <td>
+          <button class="btn btn-secondary" onclick="reprintDonationReceipt('${d.id}')" style="font-size:0.75rem; padding:6px 10px;">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+window.reprintDonationReceipt = function(donationId) {
+  let donations = [];
+  try {
+    donations = JSON.parse(localStorage.getItem(STORAGE_KEYS.DONATIONS) || '[]');
+  } catch (e) {}
+  const donation = donations.find(d => d.id === donationId);
+  if (donation) {
+    generateReceiptPDF(donation);
+  } else {
+    showToast('Not Found', 'Donation record could not be found.', 'error');
+  }
 };
+
+function initDonationsTriggers() {
+  const searchInput = document.getElementById('donations-search');
+  const causeFilter = document.getElementById('donations-cause-filter');
+
+  if (searchInput) searchInput.addEventListener('input', loadDonationsList);
+  if (causeFilter) causeFilter.addEventListener('change', loadDonationsList);
+}
 
 // ==============================================
 // AUTHENTICATION & SINGLE-SIGN-ON LOGIC
@@ -1045,6 +1424,8 @@ function initConsoleSystem() {
           panel.classList.add('active');
           if (targetPanelId === 'panel-club-notices') {
             loadClubNotices(activeUserSession.role);
+          } else if (targetPanelId === 'panel-donations') {
+            loadDonationsList();
           }
         } else {
           panel.classList.remove('active');
@@ -1175,6 +1556,23 @@ function initConsoleSystem() {
     if (settingsTab) settingsTab.style.display = 'none';
     if (settingsPanel) {
       settingsPanel.innerHTML = getRestrictedAccessOverlay('Site Settings', 'Only Admin accounts can modify site-wide configuration settings.');
+    }
+  }
+
+  // 8. Donations Tracker Panel
+  const donationsPanel = document.getElementById('panel-donations');
+  const donationsTab = document.getElementById('tab-donations');
+  if (role === 'Admin') {
+    if (donationsTab) donationsTab.style.display = 'inline-flex';
+    if (donationsPanel) {
+      donationsPanel.innerHTML = getDonationsDashboardHtml();
+      loadDonationsList();
+      initDonationsTriggers();
+    }
+  } else {
+    if (donationsTab) donationsTab.style.display = 'none';
+    if (donationsPanel) {
+      donationsPanel.innerHTML = getRestrictedAccessOverlay('Donations Tracker', 'Only Admin accounts can view and audit donation logs.');
     }
   }
 }
@@ -2203,6 +2601,17 @@ function renderWelcomeCard() {
       </div>
     `;
   }
+  
+  let syncStatusText = 'Offline Cache Active';
+  let syncStatusColor = '#f59e0b';
+
+  if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+    syncStatusText = 'Supabase Connected';
+    syncStatusColor = '#10b981';
+  } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+    syncStatusText = 'Firebase Connected';
+    syncStatusColor = '#10b981';
+  }
 
   welcomeArea.innerHTML = `
     <div class="console-welcome-card">
@@ -2213,7 +2622,13 @@ function renderWelcomeCard() {
         </div>
         <div class="welcome-text">
           <h2>${greeting}, ${activeUserSession.name}! <span class="welcome-role-badge">${activeUserSession.role}</span></h2>
-          <p>Here is your daily transaction overview and role metrics.</p>
+          <p style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
+            Here is your daily transaction overview and role metrics.
+            <span id="db-sync-status-badge" style="font-size: 0.65rem; font-weight: 700; background: var(--background); border: 1px solid var(--border); border-radius: 12px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted);">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: ${syncStatusColor};" id="db-sync-dot"></span>
+              <span id="db-sync-text">${syncStatusText}</span>
+            </span>
+          </p>
         </div>
       </div>
       <div class="welcome-kpis">
@@ -2522,13 +2937,26 @@ const CloudApiService = {
           .from('departments')
           .select('*');
         if (error) throw error;
-        return data.map(d => ({
-          ...d,
-          poc: typeof d.poc === 'string' ? JSON.parse(d.poc) : d.poc,
-          gallery: typeof d.gallery === 'string' ? JSON.parse(d.gallery) : d.gallery,
-          executiveCommittee: typeof d.executiveCommittee === 'string' ? JSON.parse(d.executiveCommittee) : d.executiveCommittee,
-          subCommittee: typeof d.subCommittee === 'string' ? JSON.parse(d.subCommittee) : d.subCommittee
-        }));
+        return data.map(d => {
+          let bannerImages = d.banner_images;
+          if (typeof bannerImages === 'string') {
+            try {
+              bannerImages = JSON.parse(bannerImages);
+            } catch (e) {
+              bannerImages = [];
+            }
+          }
+          return {
+            ...d,
+            poc: typeof d.poc === 'string' ? JSON.parse(d.poc) : d.poc,
+            gallery: typeof d.gallery === 'string' ? JSON.parse(d.gallery) : d.gallery,
+            executiveCommittee: typeof d.executiveCommittee === 'string' ? JSON.parse(d.executiveCommittee) : d.executiveCommittee,
+            subCommittee: typeof d.subCommittee === 'string' ? JSON.parse(d.subCommittee) : d.subCommittee,
+            committeeYears: d.operationalYear || d.committee_years || d.committeeYears || '2024-26',
+            banner_url: d.banner_url || d.about || '',
+            banner_images: bannerImages
+          };
+        });
       } catch (err) {
         console.error('Supabase fetch departments failed:', err);
       }
@@ -2537,7 +2965,26 @@ const CloudApiService = {
         const snapshot = await firebaseDbInstance.collection('departments').get();
         const data = [];
         snapshot.forEach(doc => data.push(doc.data()));
-        return data;
+        return data.map(d => {
+          let bannerImages = d.banner_images;
+          if (typeof bannerImages === 'string') {
+            try {
+              bannerImages = JSON.parse(bannerImages);
+            } catch (e) {
+              bannerImages = [];
+            }
+          }
+          return {
+            ...d,
+            poc: typeof d.poc === 'string' ? JSON.parse(d.poc) : d.poc,
+            gallery: typeof d.gallery === 'string' ? JSON.parse(d.gallery) : d.gallery,
+            executiveCommittee: typeof d.executiveCommittee === 'string' ? JSON.parse(d.executiveCommittee) : d.executiveCommittee,
+            subCommittee: typeof d.subCommittee === 'string' ? JSON.parse(d.subCommittee) : d.subCommittee,
+            committeeYears: d.operationalYear || d.committee_years || d.committeeYears || '2024-26',
+            banner_url: d.banner_url || d.about || '',
+            banner_images: bannerImages
+          };
+        });
       } catch (err) {
         console.error('Firebase fetch departments failed:', err);
       }
@@ -2801,6 +3248,49 @@ const CloudApiService = {
         .eq('id', id);
       if (error) throw error;
     }
+  },
+
+  getDonations: async () => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      try {
+        const { data, error } = await supabaseClientInstance
+          .from('donations')
+          .select('*');
+        if (error) throw error;
+        return data.map(d => ({
+          id: d.id,
+          donorName: d.donor_name,
+          donorEmail: d.donor_email,
+          amount: d.amount,
+          cause: d.cause,
+          date: d.date,
+          referenceId: d.reference_id
+        }));
+      } catch (err) {
+        console.error('Supabase fetch donations failed:', err);
+      }
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      try {
+        const snapshot = await firebaseDbInstance.collection('donations').get();
+        const data = [];
+        snapshot.forEach(doc => data.push(doc.data()));
+        return data;
+      } catch (err) {
+        console.error('Firebase fetch donations failed:', err);
+      }
+    }
+    return null;
+  },
+
+  addDonation: async (newDonation) => {
+    if (activeCloudProvider === 'supabase' && supabaseClientInstance) {
+      const { error } = await supabaseClientInstance
+        .from('donations')
+        .insert([newDonation]);
+      if (error) throw error;
+    } else if (activeCloudProvider === 'firebase' && firebaseDbInstance) {
+      await firebaseDbInstance.collection('donations').doc(newDonation.id).set(newDonation);
+    }
   }
 };
 
@@ -2846,12 +3336,20 @@ async function syncCloudDataOnLanding() {
       console.log('[Udayan Sync] Community event planners synchronized.');
     }
 
+    // 4.5 Sync Donations
+    const cloudDonations = await CloudApiService.getDonations();
+    if (cloudDonations && cloudDonations.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(cloudDonations));
+      console.log('[Udayan Sync] Donation transactions synchronized.');
+    }
+
     // Refresh rendering grids and stats dynamically with live cloud database
     syncAndRenderWings();
     syncAndRenderEvents();
     updateHeroStatistics();
     updateHeroEventCard();
     updateCommitteesList();
+    renderGallerySection();
     
     if (activeUserSession) {
       renderWelcomeCard();
@@ -3108,8 +3606,15 @@ function updateCommitteesList() {
         { name: 'Arundhati Sen', role: 'Cultural Convener' },
         { name: 'Rohan Banerjee', role: 'Sports Coordinator' },
         { name: 'Keya Das', role: 'Student Coordinator' }
-      ]
+      ],
+      committeeYears: '2024-26'
     };
+  }
+
+  // Update Governing Body heading with years
+  const headingEl = document.getElementById('exec-committee-heading');
+  if (headingEl) {
+    headingEl.textContent = `Executive Committee (${general.committeeYears || general.committee_years || '2024-26'})`;
   }
 
   // Helper to determine role sorting priority hierarchy
@@ -3745,29 +4250,78 @@ window.openEventAddEditModal = function(eventId = null) {
 };
 
 // --- SITE SETTINGS & HOMEPAGE BANNER CONFIGURATION ---
+let slideshowTimer = null;
+
 function updateSiteBannerFromDatabase() {
   const raw = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
-  let bannerUrl = 'udayan_banner.png'; // default fallback
+  let bannerImages = ['udayan_banner.png'];
+  let slideshowEnabled = true;
+  let slideshowInterval = 5;
+
   if (raw) {
     try {
       const depts = JSON.parse(raw);
       const general = depts.find(d => d.id === 'general');
       if (general) {
+        let primaryUrl = '';
         if (general.banner_url) {
-          bannerUrl = convertGoogleDriveLink(general.banner_url);
+          primaryUrl = convertGoogleDriveLink(general.banner_url);
         } else if (general.about && (general.about.startsWith('http://') || general.about.startsWith('https://'))) {
-          bannerUrl = convertGoogleDriveLink(general.about);
-        } else if (general.gallery && general.gallery.length > 0) {
-          bannerUrl = convertGoogleDriveLink(general.gallery[0].url);
+          primaryUrl = convertGoogleDriveLink(general.about);
+        }
+        
+        if (general.banner_images && Array.isArray(general.banner_images) && general.banner_images.length > 0) {
+          bannerImages = general.banner_images.map(img => convertGoogleDriveLink(img));
+          if (primaryUrl && !bannerImages.includes(primaryUrl)) {
+            bannerImages.unshift(primaryUrl);
+          }
+        } else if (primaryUrl) {
+          bannerImages = [primaryUrl];
+        }
+
+        if (general.slideshow_enabled !== undefined) {
+          slideshowEnabled = general.slideshow_enabled;
+        }
+        if (general.slideshow_interval !== undefined) {
+          slideshowInterval = parseInt(general.slideshow_interval) || 5;
         }
       }
     } catch (e) {
-      console.warn('Error reading banner url from departments:', e);
+      console.warn('Error reading banner settings:', e);
     }
   }
+
   const bannerImgEl = document.querySelector('.hero-banner-image');
-  if (bannerImgEl) {
-    bannerImgEl.style.backgroundImage = `url('${bannerUrl}')`;
+  if (!bannerImgEl) return;
+
+  if (slideshowTimer) {
+    clearInterval(slideshowTimer);
+    slideshowTimer = null;
+  }
+
+  bannerImgEl.innerHTML = '';
+  
+  if (bannerImages.length === 0) {
+    bannerImages = ['udayan_banner.png'];
+  }
+
+  bannerImages.forEach((imgUrl, idx) => {
+    const slide = document.createElement('div');
+    slide.className = `slide ${idx === 0 ? 'active' : ''}`;
+    slide.style.backgroundImage = `url('${imgUrl}')`;
+    bannerImgEl.appendChild(slide);
+  });
+
+  if (slideshowEnabled && bannerImages.length > 1) {
+    let currentSlideIdx = 0;
+    slideshowTimer = setInterval(() => {
+      const slides = bannerImgEl.querySelectorAll('.slide');
+      if (slides.length <= 1) return;
+      
+      slides[currentSlideIdx].classList.remove('active');
+      currentSlideIdx = (currentSlideIdx + 1) % slides.length;
+      slides[currentSlideIdx].classList.add('active');
+    }, slideshowInterval * 1000);
   }
 }
 
@@ -3859,54 +4413,93 @@ async function updateContactSection() {
 
 function getSiteSettingsDashboardHtml() {
   let currentBanner = '';
+  let slideshowEnabled = true;
+  let slideshowInterval = 5;
+  let bannerImagesStr = '';
+  let committeeYears = '2024-26';
+
   try {
     const depts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
     const general = depts.find(d => d.id === 'general');
     if (general) {
       currentBanner = general.banner_url || general.about || '';
+      slideshowEnabled = general.slideshow_enabled !== undefined ? general.slideshow_enabled : true;
+      slideshowInterval = general.slideshow_interval !== undefined ? general.slideshow_interval : 5;
+      bannerImagesStr = general.banner_images ? general.banner_images.join('\n') : '';
+      committeeYears = general.committeeYears || general.committee_years || '2024-26';
     }
   } catch (e) {}
 
   return `
     <div class="payment-form-card" style="max-width: 800px; margin: 0 auto; text-align: left;">
-      <h3><i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Homepage Banner Configuration</h3>
+      <h3><i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Udayan Website & Banner Settings</h3>
       <p style="margin-bottom: 24px; font-size: 0.9rem; color: var(--text-muted);">
-        Customize the primary banner image displayed on the homepage. You can provide a standard public URL or a Google Drive file sharing link.
+        Customize key settings such as the homepage banner slide, automatic picture transitions, and the Executive Committee tenure years.
       </p>
 
       <form id="site-settings-form" novalidate>
+        <h4 style="font-size: 1rem; color: var(--primary); margin-bottom: 12px; border-bottom: 1px dashed var(--border); padding-bottom: 6px;"><i class="fa-solid fa-user-group"></i> Executive Committee Tenure</h4>
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label for="settings-committee-years">Executive Committee Years</label>
+          <input type="text" id="settings-committee-years" class="form-control" 
+                 placeholder="e.g. 2024-26" 
+                 value="${committeeYears}" required>
+        </div>
+
+        <h4 style="font-size: 1rem; color: var(--primary); margin-bottom: 12px; border-bottom: 1px dashed var(--border); padding-bottom: 6px;"><i class="fa-solid fa-images"></i> Hero Banner Slideshow</h4>
+        
         <div class="form-group" style="margin-bottom: 20px;">
-          <label for="settings-banner-url">Banner Image URL (Google Drive Supported)</label>
+          <label for="settings-banner-url">Primary Banner Image URL (Google Drive Supported)</label>
           <input type="url" id="settings-banner-url" class="form-control" 
                  placeholder="e.g. https://drive.google.com/file/d/... or https://images.unsplash.com/..." 
                  value="${currentBanner}">
-          <small style="color: var(--text-muted); margin-top: 4px; display: block;">
-            Google Drive share links will automatically be transformed into direct embed links.
-          </small>
         </div>
 
-        <div id="settings-banner-preview-container" style="margin-bottom: 24px; display: ${currentBanner ? 'block' : 'none'};">
-          <span style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">Live Banner Preview:</span>
-          <div style="width: 100%; height: 200px; border-radius: var(--radius-md); border: 1px solid var(--border); overflow: hidden; background: var(--background);">
+        <div id="settings-banner-preview-container" style="margin-bottom: 20px; display: ${currentBanner ? 'block' : 'none'};">
+          <span style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">Live Primary Banner Preview:</span>
+          <div style="width: 100%; height: 160px; border-radius: var(--radius-md); border: 1px solid var(--border); overflow: hidden; background: var(--background);">
             <img id="settings-banner-preview" src="${currentBanner ? convertGoogleDriveLink(currentBanner) : ''}" 
                  style="width: 100%; height: 100%; object-fit: cover;" alt="Banner Preview">
           </div>
         </div>
 
+        <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+          <div class="form-group" style="flex: 1; min-width: 240px; display: flex; align-items: center; gap: 10px; user-select: none;">
+            <input type="checkbox" id="settings-slideshow-enabled" style="width: 20px; height: 20px; accent-color: var(--primary);" ${slideshowEnabled ? 'checked' : ''}>
+            <label for="settings-slideshow-enabled" style="margin-bottom: 0; cursor: pointer; text-transform: none;">Enable Automatic Image Transition</label>
+          </div>
+          
+          <div class="form-group" style="flex: 1; min-width: 240px;">
+            <label for="settings-slideshow-interval">Transition Speed (seconds)</label>
+            <input type="number" id="settings-slideshow-interval" class="form-control" min="1" max="60" value="${slideshowInterval}">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label for="settings-slideshow-images">Slideshow Image URLs (One URL per line)</label>
+          <textarea id="settings-slideshow-images" class="form-control" style="height: 120px; font-family: monospace; font-size: 0.85rem;" placeholder="https://images.unsplash.com/...\nhttps://images.unsplash.com/...">${bannerImagesStr}</textarea>
+          <small style="color: var(--text-muted); margin-top: 4px; display: block;">
+            List alternative banner pictures here. They will automatically cross-fade in order.
+          </small>
+        </div>
+
         <div style="background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px;">
           <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-database" style="color: var(--secondary);"></i> Supabase Schema Setup
+            <i class="fa-solid fa-database" style="color: var(--secondary);"></i> Optional Supabase Columns Setup
           </h4>
           <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-            To persist this setting under its dedicated column, execute the following SQL in your Supabase SQL Editor:
+            To fully persist these settings under dedicated schema columns, run this SQL in your Supabase Editor:
           </p>
-          <code style="display: block; background: var(--surface); padding: 10px 14px; border: 1px solid var(--border); border-radius: 4px; font-family: monospace; font-size: 0.8rem; color: var(--primary);">
-            ALTER TABLE departments ADD COLUMN banner_url TEXT;
+          <code style="display: block; background: var(--surface); padding: 10px 14px; border: 1px solid var(--border); border-radius: 4px; font-family: monospace; font-size: 0.8rem; color: var(--primary); white-space: pre-wrap;">
+ALTER TABLE departments ADD COLUMN committee_years TEXT;
+ALTER TABLE departments ADD COLUMN banner_images TEXT;
+ALTER TABLE departments ADD COLUMN slideshow_enabled BOOLEAN;
+ALTER TABLE departments ADD COLUMN slideshow_interval INT;
           </code>
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
-          <i class="fa-solid fa-floppy-disk"></i> Save Banner URL
+          <i class="fa-solid fa-floppy-disk"></i> Save Web Settings
         </button>
       </form>
     </div>
@@ -3918,6 +4511,11 @@ function initSiteSettingsTriggers() {
   const input = document.getElementById('settings-banner-url');
   const previewContainer = document.getElementById('settings-banner-preview-container');
   const previewImg = document.getElementById('settings-banner-preview');
+
+  const yearsInput = document.getElementById('settings-committee-years');
+  const slideshowCheckbox = document.getElementById('settings-slideshow-enabled');
+  const intervalInput = document.getElementById('settings-slideshow-interval');
+  const listTextarea = document.getElementById('settings-slideshow-images');
 
   if (!form || !input || !previewContainer || !previewImg) return;
 
@@ -3936,12 +4534,23 @@ function initSiteSettingsTriggers() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const url = input.value.trim();
-    await saveBannerUrl(url);
+    const years = yearsInput.value.trim();
+    const slideshow = slideshowCheckbox.checked;
+    const interval = parseInt(intervalInput.value) || 5;
+    const images = listTextarea.value.split('\n').map(l => l.trim()).filter(l => l !== '');
+
+    await saveSiteSettings({
+      banner_url: url,
+      committeeYears: years,
+      slideshow_enabled: slideshow,
+      slideshow_interval: interval,
+      banner_images: images
+    });
   });
 }
 
-async function saveBannerUrl(newUrl) {
-  showLoader('Saving banner configuration...');
+async function saveSiteSettings(settings) {
+  showLoader('Saving site configuration...');
   try {
     let depts = [];
     try {
@@ -3955,38 +4564,41 @@ async function saveBannerUrl(newUrl) {
         name: 'General',
         category: 'General',
         icon: '📋',
-        banner_url: newUrl
+        ...settings
       });
     } else {
-      depts[generalIndex].banner_url = newUrl;
+      depts[generalIndex] = {
+        ...depts[generalIndex],
+        ...settings
+      };
     }
     localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
     updateSiteBannerFromDatabase();
+    updateCommitteesList();
 
     if (activeCloudProvider !== 'none') {
       try {
-        // Try directly updating the banner_url column on Supabase
-        await CloudApiService.updateDepartment('general', { banner_url: newUrl });
-        showToast('Settings Saved', 'Homepage banner URL updated in database successfully.', 'success');
+        const dbPayload = {
+          about: settings.banner_url,
+          operationalYear: settings.committeeYears,
+          slideshow_enabled: settings.slideshow_enabled,
+          slideshow_interval: settings.slideshow_interval,
+          banner_images: JSON.stringify(settings.banner_images)
+        };
+        await CloudApiService.updateDepartment('general', dbPayload);
+        showToast('Settings Saved', 'Homepage settings updated in database successfully.', 'success');
       } catch (dbErr) {
-        console.warn('Failed to update banner_url column directly. Retrying using about column fallback...', dbErr);
+        console.warn('Failed to update settings columns directly. Retrying using fallback...', dbErr);
         try {
-          // Update the local storage general.about value first
-          try {
-            depts = JSON.parse(localStorage.getItem(STORAGE_KEYS.DEPARTMENTS) || '[]');
-          } catch(e) {}
           generalIndex = depts.findIndex(d => d.id === 'general');
           if (generalIndex !== -1) {
-            depts[generalIndex].about = newUrl;
+            depts[generalIndex].about = settings.banner_url;
             localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(depts));
           }
-          updateSiteBannerFromDatabase();
-          
-          // Then update the about column in the cloud database
-          await CloudApiService.updateDepartment('general', { about: newUrl });
-          showToast('Settings Saved (Fallback)', 'Saved to department metadata. Please run ALTER TABLE to add banner_url column.', 'warning');
+          await CloudApiService.updateDepartment('general', { about: settings.banner_url });
+          showToast('Settings Saved (Fallback)', 'Saved URL to metadata. Please run the ALTER TABLE sql script.', 'warning');
         } catch (fallbackErr) {
-          throw new Error('Database update failed. Please ensure database connection is active or run: ALTER TABLE departments ADD COLUMN banner_url TEXT;');
+          throw new Error('Database update failed. Ensure connection is active.');
         }
       }
     } else {
@@ -4134,6 +4746,101 @@ window.deleteNoticeItem = async function(id, title) {
     hideLoader();
   }
 };
+
+function renderGallerySection() {
+  const filtersWrapper = document.getElementById('gallery-filters-wrapper');
+  const photosGrid = document.getElementById('gallery-photos-grid');
+  if (!photosGrid || !filtersWrapper) return;
+
+  let departments = [];
+  try {
+    const rawData = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
+    if (rawData) {
+      departments = JSON.parse(rawData).filter(d => d.id !== 'general' && !(d.id || '').toLowerCase().includes('executive') && !(d.id || '').toLowerCase().includes('general') && !(d.name || '').toLowerCase().includes('executive') && !(d.name || '').toLowerCase().includes('general'));
+    }
+  } catch (e) {
+    console.warn('Could not read departments storage for gallery.');
+  }
+
+  if (departments.length === 0) {
+    departments = SEED_DEPARTMENTS;
+  }
+
+  const photos = [];
+  const categories = new Set();
+
+  departments.forEach(dept => {
+    if (dept.gallery && Array.isArray(dept.gallery)) {
+      dept.gallery.forEach(img => {
+        photos.push({
+          url: convertGoogleDriveLink(img.url),
+          title: img.title || 'Campus Image',
+          deptName: dept.name,
+          category: dept.category
+        });
+        if (dept.category) {
+          categories.add(dept.category);
+        }
+      });
+    }
+  });
+
+  const uniqueCategories = Array.from(categories);
+  
+  filtersWrapper.innerHTML = `
+    <button class="filter-btn active" data-filter="all" id="btn-gallery-all">All Photos</button>
+    ${uniqueCategories.map(cat => {
+      let icon = '📷';
+      if (cat === 'Cultural') icon = '🎭';
+      else if (cat === 'Sports') icon = '⚽';
+      else if (cat === 'Social Service') icon = '🏥';
+      else if (cat === 'Library') icon = '📚';
+      return `<button class="filter-btn" data-filter="${cat}" id="btn-gallery-${cat.toLowerCase().replace(/\s/g, '')}">${icon} ${cat}</button>`;
+    }).join('')}
+  `;
+
+  const filterBtns = filtersWrapper.querySelectorAll('.filter-btn');
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const filterVal = btn.getAttribute('data-filter');
+      const items = photosGrid.querySelectorAll('.gallery-item');
+      
+      items.forEach(item => {
+        const itemCat = item.getAttribute('data-category');
+        if (filterVal === 'all' || itemCat === filterVal) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  photosGrid.innerHTML = '';
+  if (photos.length === 0) {
+    photosGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">No gallery images found.</div>`;
+    return;
+  }
+
+  photos.forEach((photo, idx) => {
+    const delay = (idx % 6) * 0.1;
+    photosGrid.innerHTML += `
+      <div class="gallery-item" data-category="${photo.category}" style="animation-delay: ${delay}s;" onclick="zoomPhoto('${photo.url}', '${photo.title} (${photo.deptName})')">
+        <img src="${photo.url}" alt="${photo.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=400&q=80';">
+        <div class="gallery-item-overlay">
+          <h3 class="gallery-item-overlay-title">${photo.title}</h3>
+          <div class="gallery-item-overlay-meta">
+            <span class="gallery-item-overlay-category">${photo.deptName}</span>
+            <div class="gallery-item-overlay-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
 
 
 
